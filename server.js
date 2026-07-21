@@ -1,12 +1,32 @@
-// S-Move Technologies Ltd — corporate website
-// Minimal Express static server, deployed on Railway at smt.s-move.co.uk
+// S-Move Technologies Ltd — corporate site + SMT hub
+// Express server on Railway at smt.s-move.co.uk. Serves the marketing site AND is
+// the SMT hub: it owns the cross-product lead-event spine (lead_events) that the
+// product apps (SMO removals, SMD dealer, SMC canvass) post events to.
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Sensible security headers for a static marketing site
+// SMT hub datastore (Supabase). Optional at boot so the marketing site still serves
+// even before the hub DB is provisioned — hub endpoints return 503 until it is.
+let supabase = null;
+try {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const { createClient } = require('@supabase/supabase-js');
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+    console.log('[smt-hub] Supabase connected');
+  } else {
+    console.warn('[smt-hub] Supabase env not set — hub endpoints inactive (marketing site still serves)');
+  }
+} catch (e) {
+  console.warn('[smt-hub] Supabase init skipped:', e.message);
+}
+
+// Sensible security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -17,6 +37,77 @@ app.use((req, res, next) => {
 
 // Health check for Railway
 app.get('/healthz', (_req, res) => res.status(200).send('ok'));
+
+app.use(express.json({ limit: '256kb' }));
+
+// ── SMT HUB: lead-event ingest ────────────────────────────────────────────────
+// Key-protected. The product apps POST events here (append-only reporting spine).
+function ingestKeyOk(req) {
+  const provided = Buffer.from(String(req.headers['x-smt-key'] || ''));
+  const expected = Buffer.from(String(process.env.SMT_INGEST_KEY || ''));
+  return expected.length > 0 && provided.length === expected.length &&
+    crypto.timingSafeEqual(provided, expected);
+}
+
+app.post('/api/events', async (req, res) => {
+  if (!ingestKeyOk(req)) return res.status(403).json({ error: 'forbidden' });
+  if (!supabase) return res.status(503).json({ error: 'hub_db_not_configured' });
+  try {
+    const b = req.body || {};
+    const str = (v, n) => { const s = String(v == null ? '' : v).trim().slice(0, n); return s || null; };
+    const row = {
+      source:     str(b.source, 20),
+      product:    str(b.product, 30),
+      event_type: str(b.event_type, 60),
+      channel:    str(b.channel, 20),
+      ref:        str(b.ref, 120),
+      contact:    str(b.contact, 160),
+      meta:       (b.meta && typeof b.meta === 'object' && !Array.isArray(b.meta)) ? b.meta : {},
+    };
+    if (!row.event_type) return res.status(400).json({ error: 'event_type required' });
+    const { data, error } = await supabase.from('lead_events').insert(row).select('id').single();
+    if (error) throw error;
+    res.json({ ok: true, id: data.id });
+  } catch (e) {
+    console.error('[smt-hub] event insert failed:', e.message);
+    res.status(500).json({ error: 'insert_failed' });
+  }
+});
+
+// ── SMT HUB: minimal protected event viewer ───────────────────────────────────
+// Internal, low-sensitivity dashboard. ?key= matches the ecosystem pattern
+// (SMD /preview, device-setup). Uses SMT_VIEW_KEY, falling back to the ingest key.
+app.get('/hub', async (req, res) => {
+  const expected = String(process.env.SMT_VIEW_KEY || process.env.SMT_INGEST_KEY || '');
+  if (!expected || String(req.query.key || '') !== expected) return res.status(403).send('Forbidden');
+  if (!supabase) return res.status(503).send('SMT hub database not configured yet.');
+  try {
+    const { data, error } = await supabase.from('lead_events')
+      .select('*').order('created_at', { ascending: false }).limit(300);
+    if (error) throw error;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const rows = (data || []).map(e => `<tr>
+      <td>${esc(new Date(e.created_at).toLocaleString('en-GB'))}</td>
+      <td>${esc(e.source)}</td><td>${esc(e.product)}</td>
+      <td><b>${esc(e.event_type)}</b></td><td>${esc(e.channel)}</td>
+      <td>${esc(e.ref)}</td><td>${esc(e.contact)}</td>
+      <td><code>${esc(JSON.stringify(e.meta || {}))}</code></td></tr>`).join('');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>SMT Hub — Lead Events</title>
+<style>body{font-family:system-ui,-apple-system,sans-serif;background:#0b0e14;color:#e6e6e6;margin:0;padding:20px}
+h1{font-size:18px;margin:0 0 14px}.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid #222;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#131722;position:sticky;top:0}code{color:#8fbcff;word-break:break-all}
+tr:nth-child(even){background:#0f131b}</style></head><body>
+<h1>SMT Hub — Lead Events <span style="color:#888;font-weight:400">(latest ${(data || []).length})</span></h1>
+<div class="wrap"><table><thead><tr><th>When</th><th>Source</th><th>Product</th><th>Event</th><th>Channel</th><th>Ref</th><th>Contact</th><th>Meta</th></tr></thead>
+<tbody>${rows || '<tr><td colspan="8">No events yet.</td></tr>'}</tbody></table></div></body></html>`);
+  } catch (e) {
+    console.error('[smt-hub] /hub error:', e.message);
+    res.status(500).send('Error loading events.');
+  }
+});
 
 // Static assets (1 hour cache; HTML revalidates)
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -36,5 +127,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`S-Move Technologies site listening on port ${PORT}`);
+  console.log(`S-Move Technologies site + hub listening on port ${PORT}`);
 });
