@@ -15,8 +15,13 @@ let supabase = null;
 try {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     const { createClient } = require('@supabase/supabase-js');
+    // Provide a WebSocket transport for the realtime client — newer supabase-js needs one on
+    // Node < 22 (else createClient throws "native WebSocket not found"). We never use realtime
+    // (inserts/selects only), so this just satisfies the constructor; no socket is opened.
+    const ws = require('ws');
     supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
+      realtime: { transport: ws },
     });
     console.log('[smt-hub] Supabase connected');
   } else {
