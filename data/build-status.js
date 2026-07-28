@@ -70,9 +70,12 @@ module.exports = {
         { h: 'Alerts', body: 'adminAlert() texts Alex + Dave on key events (new customer, quote accepted, call-me, messages, requests, inventory) within an 8am–9pm window.' },
         { h: 'Data-safety layer', body: 'Backup coverage + sync delete guard + soft-delete/purge + SMS watchdog. Never hard-delete financial data. Entity boundary 5 Jun, VAT boundary 1 Jul.' },
         { h: 'Access control', body: 'Hardened accountant login behind a device-invite gate (intended 2FA). Claude has a dev owner login (claude@s-move.co.uk).' },
-        { h: 'Infra note', body: 'Railway IPv6 egress is broken — all outbound forced to IPv4 (undici family:4 for Anthropic + SMTP path).' },
+        { h: 'Customer comms', body: 'Quotes, invoices and emails are sent by explicit admin button (no auto-send on status change), each with a PDF preview before sending, the paired customer SMS, a Gmail-API "landed in Sent" confirmation, and per-document sent-date tracking (sent_documents table). Company-account jobs defer email opt-out to the account, so a stale per-job opt-out no longer blocks a send.' },
+        { h: 'Infra note', body: 'Railway IPv6 egress is broken — all outbound forced to IPv4: net.setDefaultAutoSelectFamily(false) disables Happy-Eyeballs at the TCP layer (covers googleapis/Gmail via node-fetch), plus a dedicated undici IPv4 agent for Anthropic and family:4 on the SMTP path. Separately, Cloudflare replaces any origin 5xx with its own Bad-Gateway page, so endpoints return HTTP 200 {success:false,message} for expected blocks/errors so the real reason reaches the UI.' },
       ],
       milestones: [
+        { date: '2026-07-28', text: 'Customer email reworked to button-only (no auto-send) with PDF preview, Gmail-API "Sent" verification + per-document sent-tracking; fixed IPv6/Happy-Eyeballs stall on Gmail/Twilio + Cloudflare 5xx masking' },
+        { date: '2026-07-28', text: 'Admin fixes: job-card close bug, company-account standard job types + clickable job entries, inc-VAT quote entry, manual invoice description, company invoice logo + billing address, admin text-contrast boost' },
         { date: '2026-07-04', text: 'Ask S-Move co-pilot + per-user display settings live' },
         { date: '2026-07-02', text: 'Bank-transfer auto-reconcile built' },
         { date: '2026-07-01', text: 'VAT went live (standard 20%)' },
@@ -82,6 +85,7 @@ module.exports = {
         { date: '2026-06-10', text: 'Live DB wiped; migration to Supabase + RLS begun' },
       ],
       next: [
+        'Staff petty-cash / expenses: admin logs an amount + receipt against a staff member and it is reimbursed via a separate non-taxable payslip line (planned 2026-07-28 — build next)',
         'Security tab: admin login log, accountant access log, approved devices, IP colour coding',
         'Replace inventory hard-delete with a Withdraw action before launch (current delete is testing-only)',
         'Take to market once the Scottish Enterprise grant lands (never taken to market yet — £0 revenue is not a demand verdict)',
