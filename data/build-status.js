@@ -1,0 +1,299 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SMT BUILD STATUS — living record of every S-Move Technologies product build.
+//
+// THIS IS A LIVING DOCUMENT. It is maintained by Claude as part of the normal
+// workflow: whenever we make a plan, a change, or add/remove a feature, this file
+// is updated in the same commit so /build always reflects reality on deploy.
+//
+// Shape per project:
+//   key, name, short, tagline
+//   status:    live | beta | building | designed | parked
+//   stagePct:  0-100 position along the pathway (rough)
+//   stageLabel:short "where we are" line
+//   summary:   1-2 sentence what-it-is
+//   stack:     [ 'tech', ... ]
+//   architecture: [ { h: 'Area', body: 'What it does / how it works' }, ... ]
+//   milestones:   [ { date: 'YYYY-MM-DD', text: '...' }, ... ]  (newest first)
+//   next:         [ 'planned next step', ... ]
+//   refs:         [ { label, url }, ... ]
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Larger SMD research datasets live in their own modules and are attached to the
+// SMD project below (rendered by renderCompetitor / renderGoToMarket).
+const smdCompetitorAnalysis = require('./smd-competitor-analysis').competitorAnalysis;
+const smdGoToMarket = require('./smd-go-to-market').goToMarket;
+
+// Canonical documentation set every app is measured against. Each project carries a
+// `docCoverage` map: key -> { status:'have'|'partial'|'missing'|'na', docId?, note? }.
+const docTemplate = [
+  { key: 'overview',     name: 'Product Overview',                 group: 'Product' },
+  { key: 'roadmap',      name: 'Roadmap & Status',                 group: 'Product' },
+  { key: 'architecture', name: 'Technical Architecture',           group: 'Technical' },
+  { key: 'datamodel',    name: 'Data Model / Schema Dictionary',   group: 'Technical' },
+  { key: 'api',          name: 'API Reference',                    group: 'Technical' },
+  { key: 'integrations', name: 'Integrations Reference',           group: 'Technical' },
+  { key: 'env',          name: 'Environment & Config Reference',   group: 'Operations' },
+  { key: 'deploy',       name: 'Deployment & Release Runbook',     group: 'Operations' },
+  { key: 'ops',          name: 'Operations & Incident Runbook',    group: 'Operations' },
+  { key: 'backup',       name: 'Backup & Disaster Recovery',       group: 'Operations' },
+  { key: 'security',     name: 'Security Overview + Access Matrix', group: 'Security & Compliance' },
+  { key: 'gdpr',         name: 'Data Protection / Privacy (GDPR)', group: 'Security & Compliance' },
+  { key: 'testing',      name: 'Test Plan & QA Strategy',          group: 'Quality' },
+  { key: 'userguides',   name: 'User Guides',                      group: 'Users & Team' },
+  { key: 'devsetup',     name: 'Developer Onboarding / Local Setup', group: 'Users & Team' },
+  { key: 'support',      name: 'Support / Troubleshooting / FAQ',  group: 'Users & Team' },
+];
+
+module.exports = {
+  updated: '2026-07-28',
+  docTemplate,
+
+  projects: [
+    // ── SMO ──────────────────────────────────────────────────────────────────
+    {
+      key: 'smo',
+      name: 'S-Move Operations',
+      short: 'SMO',
+      tagline: 'Removals operations + admin platform',
+      status: 'live',
+      stagePct: 90,
+      stageLabel: 'Live in production — pre-market (awaiting Scottish Enterprise grant to take to market)',
+      summary: 'The removals back-office: quotes, jobs, customers, inventory, payroll and full financials, with AI and banking automation layered throughout. Used by S-Move Removals Ltd (SMR).',
+      stack: ['Node / Express', 'Supabase (service-role, RLS)', 'Railway', 'Twilio SMS', 'Gmail API (HTTPS)', 'Stripe', 'Monzo API', 'Claude API'],
+      architecture: [
+        { h: 'Core admin', body: 'Quotes, jobs, customers, inventory, payroll and I&E financials in one console. Payroll hours come from staff_start_time (job_start_time is arrival-at-job, not shift start).' },
+        { h: 'Monzo auto-sync', body: 'Friendly categories, notes preserved, pot transfers filtered, idempotent. Requires SCA re-auth roughly every 90 days. Operations imports SMR accounts only (allowlist) — one Monzo login exposes both SMR and SMT.' },
+        { h: 'VAT', body: 'I&E carries gross/net/VAT columns, job-ref linking and Stripe batch reconciliation. VAT live from 1 Jul 2026 at standard 20%. A VAT Pot tab shows net VAT due vs the live Monzo pot plus buffer.' },
+        { h: 'Receipt → VAT extraction', body: 'Monzo receipts land in Supabase Storage; Claude reads the VAT and auto-applies it to the ledger.' },
+        { h: 'Bank reconcile', body: 'Matches Monzo income to jobs by job-ref + name and sets payment_status (dry-run by default).' },
+        { h: 'AI layer', body: 'Quote price suggestion that explains itself and learns from past quotes; "Ask S-Move" in-console co-pilot (explain + point) with per-user text size, built for Dave.' },
+        { h: 'Alerts', body: 'adminAlert() texts Alex + Dave on key events (new customer, quote accepted, call-me, messages, requests, inventory) within an 8am–9pm window.' },
+        { h: 'Data-safety layer', body: 'Backup coverage + sync delete guard + soft-delete/purge + SMS watchdog. Never hard-delete financial data. Entity boundary 5 Jun, VAT boundary 1 Jul.' },
+        { h: 'Access control', body: 'Hardened accountant login behind a device-invite gate (intended 2FA). Claude has a dev owner login (claude@s-move.co.uk).' },
+        { h: 'Infra note', body: 'Railway IPv6 egress is broken — all outbound forced to IPv4 (undici family:4 for Anthropic + SMTP path).' },
+      ],
+      milestones: [
+        { date: '2026-07-04', text: 'Ask S-Move co-pilot + per-user display settings live' },
+        { date: '2026-07-02', text: 'Bank-transfer auto-reconcile built' },
+        { date: '2026-07-01', text: 'VAT went live (standard 20%)' },
+        { date: '2026-06-28', text: 'Admin SMS alerts + financial data-safety layer shipped' },
+        { date: '2026-06-27', text: 'Monzo receipt→VAT extraction deployed; local services decommissioned (Railway-only)' },
+        { date: '2026-06-14', text: 'server.js split refactor (pre-refactor-backup tag on GitHub)' },
+        { date: '2026-06-10', text: 'Live DB wiped; migration to Supabase + RLS begun' },
+      ],
+      next: [
+        'Security tab: admin login log, accountant access log, approved devices, IP colour coding',
+        'Replace inventory hard-delete with a Withdraw action before launch (current delete is testing-only)',
+        'Take to market once the Scottish Enterprise grant lands (never taken to market yet — £0 revenue is not a demand verdict)',
+        'Retail / white-label SMO as a product for other removals firms — resume by stripping personal data ("RemovalDesk" name is dead)',
+      ],
+      refs: [
+        { label: 'Live app', url: 'https://app.s-move.co.uk' },
+        { label: 'Customer booking', url: 'https://app.s-move.co.uk/customer' },
+        { label: 'AI booking line', url: 'tel:+447414140899' },
+      ],
+      docs: [
+        { id: 'smo-tech-arch', title: 'Technical Architecture v2', type: 'html', file: 'smo-technical-architecture.html', note: 'Full system architecture — stack, 35-table DB, 258 APIs, 10 core workflows, AI, security' },
+        { id: 'smo-overview', title: 'Plain-Language Overview', type: 'html', file: 'smo-plain-overview.html', note: 'Non-technical explainer of how the platform works' },
+        { id: 'smo-admin-guide', title: 'Admin Console — User Guide', type: 'pdf', file: 'smo-admin-guide.pdf' },
+        { id: 'smo-customer-guide', title: 'Customer Portal — User Guide', type: 'pdf', file: 'smo-customer-guide.pdf' },
+        { id: 'smo-staff-guide', title: 'Staff Portal — User Guide', type: 'pdf', file: 'smo-staff-guide.pdf' },
+        { id: 'smo-ops-runbook', title: 'Operations & Incident Runbook', type: 'html', file: 'smo-ops-runbook.html', note: 'Deploy/rollback, known failure modes + fixes, backups, alerts' },
+        { id: 'smo-env-config', title: 'Environment & Config Reference', type: 'html', file: 'smo-env-config.html', note: 'Every env var/secret and external endpoint' },
+        { id: 'smo-data-dictionary', title: 'Data Dictionary', type: 'html', file: 'smo-data-dictionary.html', note: 'All 35 tables — fields, relationships, purpose' },
+        { id: 'smo-data-protection', title: 'Data Protection / GDPR', type: 'html', file: 'smo-data-protection.html', note: 'DRAFT for review — data inventory, rights, retention, processors' },
+        { id: 'smo-dev-setup', title: 'Developer Onboarding / Local Setup', type: 'html', file: 'smo-dev-setup.html', note: 'Clone, env, run, build, deploy' },
+      ],
+      docCoverage: {
+        overview:     { status: 'have', docId: 'smo-overview' },
+        roadmap:      { status: 'have', note: 'this dashboard' },
+        architecture: { status: 'have', docId: 'smo-tech-arch' },
+        datamodel:    { status: 'have', docId: 'smo-data-dictionary', note: 'table-level; field-level TBD' },
+        api:          { status: 'partial', note: 'key endpoints in architecture §5; full 258 not documented' },
+        integrations: { status: 'partial', note: 'covered across architecture + env reference; no standalone doc' },
+        env:          { status: 'have', docId: 'smo-env-config' },
+        deploy:       { status: 'have', docId: 'smo-ops-runbook', note: 'Ops runbook §2–3' },
+        ops:          { status: 'have', docId: 'smo-ops-runbook' },
+        backup:       { status: 'have', docId: 'smo-ops-runbook', note: 'Ops runbook §6' },
+        security:     { status: 'partial', note: 'architecture §8 + data-protection §6; no standalone access matrix' },
+        gdpr:         { status: 'have', docId: 'smo-data-protection', note: 'draft — needs review' },
+        testing:      { status: 'have', note: 'TEST_PLAN.md in repo' },
+        userguides:   { status: 'have', docId: 'smo-admin-guide', note: 'Admin / Customer / Staff guides' },
+        devsetup:     { status: 'have', docId: 'smo-dev-setup' },
+        support:      { status: 'missing', note: 'could fold into user guides' },
+      },
+    },
+
+    // ── SMD ──────────────────────────────────────────────────────────────────
+    {
+      key: 'smd',
+      name: 'S-Move Dealer',
+      short: 'SMD',
+      tagline: 'Community high-street marketplace + directory',
+      status: 'beta',
+      stagePct: 60,
+      stageLabel: 'Beta — community directory-first pivot; marketplace not yet open, no hard launch date (gate on readiness)',
+      summary: 'A community-first directory and marketplace to revive the local high street by banding independent shops together. "Your Highstreet Online" / "Shop local, discover more."',
+      stack: ['Node / Express', 'obfuscate.js build (SRC_FILES)', 'Supabase (wayqlbhdflyioacqbwtb)', 'Railway', 'Twilio SMS (via SMO number)', 'Gmail API (HTTPS)', 'Stripe (SMT account)', 'sharp (thumbnails)'],
+      architecture: [
+        { h: 'Directory-first', body: 'Community-wide directory lists ALL shops in one mixed catalogue; businesses "claim your listing". Sponsorship = sidebar discovery, never product ranking.' },
+        { h: 'Discovery / ranking', body: 'Region/town soft filter + hard category filter + similar-items padding + filter-aware pill counts. Ranking is earned and un-buyable (views + votes), never paid boosts.' },
+        { h: 'Sellers', body: 'All sellers register an account (no unauthenticated selling). Tabbed "My Shop" personalisation: own-delivery, listing order, colours, holiday mode (Phase 1 deployed).' },
+        { h: 'SMD own stock', body: 'A special seller identified by SMOVE_SELLER_ID; internal stock is seller_id NULL or = SMOVE_SELLER_ID.' },
+        { h: 'Sponsored sidebar', body: 'Earned ranking + Stripe subscriptions (~£49/mo), comp toggle, Pioneer badge, beta gate. Money routes to the SMT Stripe account.' },
+        { h: 'Media', body: 'sharp generates 480px WebP thumbnails on upload with graceful fallback.' },
+        { h: 'Email', body: 'All email moved to Gmail API over HTTPS (sends as alex@) because Railway blocks outbound SMTP — this fixed the zero-sign-ups issue (verify email was a hard gate).' },
+        { h: 'PWAs', body: 'Five separate PWAs (shop / seller / canvass / staff / admin), each with a stable manifest id so names do not drift.' },
+        { h: 'Analytics', body: 'page_visits table + /api/track/visit beacons feed the admin Data Monitor.' },
+        { h: 'Build gotcha', body: 'Every new .js must be added to SRC_FILES in obfuscate.js in the same commit or Railway crashes (MODULE_NOT_FOUND).' },
+      ],
+      milestones: [
+        { date: '2026-07-27', text: 'Go-to-market groundwork: competitor analysis (ShopAppy/Trouva) + council outreach plan + local champions map across the 4 Lothian councils (now live in the panels below)' },
+        { date: '2026-07-23', text: 'First full AI cinematic advert complete (Veo + VO + captions + music)' },
+        { date: '2026-07-19', text: 'Seller sign-up email fixed (Gmail API over HTTPS); SMD admin SMS alerts live' },
+        { date: '2026-07-17', text: 'Community pivot: directory-first, list all shops, "claim your listing"' },
+        { date: '2026-07-11', text: 'Coming-soon/403 gate rebuilt into single-source explainer + area carousels' },
+        { date: '2026-07-05', text: 'Canvassing field app built (see Canvass project)' },
+        { date: '2026-06-30', text: 'Location filtering + image thumbnails shipped' },
+        { date: '2026-06-27', text: 'Dealer admin trust-proxy fix; local services decommissioned' },
+      ],
+      next: [
+        'Community social forums (per area) — pre-seed each area with editorial directory posts before the marketplace opens; doubles as the "claim your listing" funnel. Full plan drafted 24 Jul (see refs).',
+        'DECIDE the peer-selling guardrail before forum member-posting (Phase 2): community & discovery only vs classifieds — affects FCA/scam-dispute exposure',
+        'Sponsored sidebar TODO: votes/hearts UI, business-view tracking, donations dunning, sponsor page',
+        'Seller "My Shop" phase-2 backlog',
+        'First fair conversion test now the sign-up funnel is fixed',
+        'Go-to-market: approach the 4 Lothian councils (start East Lothian) + warm local champions (Scotland\'s Towns Partnership, Dunbar Trades\' Assoc, One Linlithgow BID, Dalkeith Means Business, Daniel Johnson MSP). Full plan + contacts in the Go-to-market panel below.',
+      ],
+      refs: [
+        { label: 'Shop (beta)', url: 'https://shop.s-move.co.uk' },
+        { label: 'Forums plan', url: 'file:///E:/Claude/SMD%20Community%20Forums%20Implementation%20Plan.pdf' },
+        { label: 'Council outreach plan', url: 'file:///E:/Claude/SMD%20Council%20Outreach%20Plan.md' },
+        { label: 'Local champions & allies', url: 'file:///E:/Claude/SMD%20Local%20Champions%20%26%20Allies.md' },
+        { label: 'GitHub', url: 'https://github.com/SMovetech/smove-dealer' },
+      ],
+      docs: [
+        { id: 'smd-qr-stocksync', title: 'QR Stock-Sync — Plan & Canvassing Pack', type: 'pdf', file: 'smd-qr-stocksync.pdf' },
+        { id: 'smd-sponsored-sidebar', title: 'Sponsored Sidebar & Hearts — Spec', type: 'pdf', file: 'smd-sponsored-sidebar.pdf' },
+        { id: 'smd-scale-performance', title: 'Scale & Performance — Planning Doc', type: 'pdf', file: 'smd-scale-performance.pdf' },
+        { id: 'smd-scaling-cost', title: 'Scaling & Cost Plan', type: 'pdf', file: 'smd-scaling-cost.pdf' },
+        { id: 'smd-direct-checkout', title: 'Direct Checkout — Pre-Planning Brief', type: 'pdf', file: 'smd-direct-checkout.pdf' },
+      ],
+      competitorAnalysis: smdCompetitorAnalysis,
+      goToMarket: smdGoToMarket,
+      docCoverage: {
+        overview:     { status: 'partial', note: 'implicit in summary; no standalone explainer' },
+        roadmap:      { status: 'have', note: 'this dashboard' },
+        architecture: { status: 'partial', note: 'architecture bullets here; no formal doc like SMO' },
+        datamodel:    { status: 'missing' },
+        api:          { status: 'missing' },
+        integrations: { status: 'partial', note: 'noted in architecture; no standalone doc' },
+        env:          { status: 'missing' },
+        deploy:       { status: 'partial', note: 'git-push + SRC_FILES gotcha known; not written up' },
+        ops:          { status: 'missing' },
+        backup:       { status: 'partial', note: 'shared Dealer Supabase backup' },
+        security:     { status: 'partial', note: 'RLS audit exists; no standalone doc' },
+        gdpr:         { status: 'missing' },
+        testing:      { status: 'missing' },
+        userguides:   { status: 'missing', note: 'seller + shopper guides needed' },
+        devsetup:     { status: 'missing' },
+        support:      { status: 'missing' },
+      },
+    },
+
+    // ── CANVASS ────────────────────────────────────────────────────────────────
+    {
+      key: 'canvass',
+      name: 'Canvass',
+      short: 'SMC',
+      tagline: 'Field canvassing app + shop recon',
+      status: 'building',
+      stagePct: 45,
+      stageLabel: 'Built, not yet pushed — needs schema migration + seed before go-live',
+      summary: 'A field PWA to visit and onboard independent shops for SMD: track visits and run AI shopfront-photo recon. Feeds the directory and the claim-your-listing funnel.',
+      stack: ['PWA (/canvass)', 'Node / Express', 'Supabase', 'Claude vision (shopfront recon)'],
+      architecture: [
+        { h: 'Visit tracking', body: 'Field workers log shop visits; no-website shops are the top onboarding targets.' },
+        { h: 'AI recon', body: 'Shopfront-photo recon produces a quick read on each shop to prime the visit.' },
+        { h: 'Research base', body: 'Per-council Excel of independent shops across all 4 regions is complete — roughly 627 shops, of which ~336 have no website.' },
+      ],
+      milestones: [
+        { date: '2026-07-05', text: 'Canvassing field app built (needs canvass_schema.sql + seed-canvass.js; not pushed)' },
+        { date: '2026-07-05', text: 'Canvass research complete: 4 regions, ~627 shops (~336 no-website)' },
+      ],
+      next: [
+        'Run canvass_schema.sql + node seed-canvass.js, then push to deploy',
+        'Field-test the visit + recon flow',
+        'Canvass Intelligence Engine (AI pre-call briefs) is parked as a potential 3rd SMT product until SMD self-funds',
+      ],
+      refs: [
+        { label: 'Canvass research', url: 'file:///E:/Claude/Canvas%20Research/' },
+      ],
+      docCoverage: {
+        overview:     { status: 'partial', note: 'summarised here; no standalone doc' },
+        roadmap:      { status: 'have', note: 'this dashboard' },
+        architecture: { status: 'partial', note: 'architecture bullets here; small app, keep light' },
+        datamodel:    { status: 'partial', note: 'canvass_schema.sql defines it' },
+        api:          { status: 'missing' },
+        integrations: { status: 'na', note: 'shares SMD/Supabase + Claude vision' },
+        env:          { status: 'missing' },
+        deploy:       { status: 'missing', note: 'not yet pushed' },
+        ops:          { status: 'na' },
+        backup:       { status: 'partial', note: 'shared Dealer Supabase backup' },
+        security:     { status: 'partial' },
+        gdpr:         { status: 'missing', note: 'captures shop/visit data + photos' },
+        testing:      { status: 'missing' },
+        userguides:   { status: 'missing', note: 'field-worker guide needed' },
+        devsetup:     { status: 'missing' },
+        support:      { status: 'na' },
+      },
+    },
+
+    // ── POS / STOCK ─────────────────────────────────────────────────────────────
+    {
+      key: 'pos',
+      name: 'POS / Stock',
+      short: 'POS',
+      tagline: 'Phone-as-POS + unified stock-truth for small shops',
+      status: 'designed',
+      stagePct: 20,
+      stageLabel: 'Researched & designed — not built; validate shop demand before build',
+      summary: 'Turn a shop owner’s phone into a point of sale with a single source of stock-truth across online and physical selling, so nothing gets double-sold.',
+      stack: ['(TBD)', 'Tap-to-Pay', 'Signed QR codes', 'Stripe'],
+      architecture: [
+        { h: 'Phone-as-POS', body: 'Own-the-sale checkout on the shop owner’s phone, Tap-to-Pay for card payments.' },
+        { h: 'Stock-truth', body: 'One unified stock count across the online listing and the physical shop. A signed QR per item syncs both; scanning reserves stock (scan ≠ auto-sell, reserve-on-scan) to prevent double-selling.' },
+        { h: 'Regulatory framing', body: 'Direct-from-business checkout was researched: Stripe Connect would keep SMD out of FCA scope. Decision: subscription-only, and validate demand before building.' },
+      ],
+      milestones: [
+        { date: '2026-07-24', text: 'Design + phased plan documented (plan PDF in E:\\Claude)' },
+      ],
+      next: [
+        'Validate real shop demand before any build',
+        'Phase the build once demand is proven',
+      ],
+      refs: [],
+      docs: [
+        { id: 'pos-stock-research', title: 'Small Business Stock Management — Research Report', type: 'pdf', file: 'pos-stock-research.pdf' },
+      ],
+      docCoverage: {
+        overview:     { status: 'have', docId: 'pos-stock-research', note: 'research report + design' },
+        roadmap:      { status: 'have', note: 'this dashboard' },
+        architecture: { status: 'partial', note: 'design bullets here; formal doc when it graduates to build' },
+        datamodel:    { status: 'na', note: 'not built' },
+        api:          { status: 'na' },
+        integrations: { status: 'na' },
+        env:          { status: 'na' },
+        deploy:       { status: 'na' },
+        ops:          { status: 'na' },
+        backup:       { status: 'na' },
+        security:     { status: 'na' },
+        gdpr:         { status: 'na' },
+        testing:      { status: 'na' },
+        userguides:   { status: 'na' },
+        devsetup:     { status: 'na' },
+        support:      { status: 'na' },
+      },
+    },
+  ],
+};

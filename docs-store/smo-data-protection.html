@@ -1,0 +1,90 @@
+<p><strong>S-Move Operations — Data Protection &amp; Privacy (UK GDPR)</strong></p>
+<p>How the platform collects, uses, stores and protects personal data, and how to handle data-subject requests. This is an internal reference for the controller.</p>
+<p style="color:#fbbf24"><strong>⚠ Draft for review.</strong> This is a first draft written from the system's data model, not legal advice. Items marked <strong>[CONFIRM]</strong> need a human/DPO/accountant decision before this is treated as authoritative — especially ICO registration, lawful bases, and retention periods.</p>
+
+<h1>1. Controller &amp; scope</h1>
+<ul>
+<li><strong>Data controller:</strong> S-Move Removals Ltd (SMR), SC892140. [CONFIRM ICO registration / data-protection fee status.]</li>
+<li><strong>Scope:</strong> the S-Move Operations platform (app.s-move.co.uk) and its Supabase database — customer, staff, financial and communications data.</li>
+<li><strong>Contact for data matters:</strong> alex@s-move.co.uk. [CONFIRM whether a formal DPO is required — likely not, but record the decision.]</li>
+</ul>
+
+<h1>2. Personal data inventory</h1>
+<table>
+<thead><tr><th>Category</th><th>Data</th><th>Where (tables)</th><th>Lawful basis [CONFIRM]</th></tr></thead>
+<tbody>
+<tr><td>Customer identity &amp; job</td><td>Name, phone, email, addresses (from/to), move date, job details</td><td>customers</td><td>Contract</td></tr>
+<tr><td>Customer comms</td><td>Portal messages, email/SMS/call logs</td><td>messages, comm_logs</td><td>Contract / legitimate interest</td></tr>
+<tr><td>Customer payments</td><td>Payment requests, statuses, links (card data held by Stripe, not us)</td><td>payment_requests, income_expenditure</td><td>Contract / legal obligation (accounting)</td></tr>
+<tr><td>Staff HR</td><td>Name, contact, roles, hourly rate, <strong>bank details</strong>, absences, password hash</td><td>staff_members</td><td>Contract / legal obligation</td></tr>
+<tr><td>Payroll</td><td>Hours, gross/net pay per week</td><td>payslips</td><td>Legal obligation (employment/tax)</td></tr>
+<tr><td>Partner companies</td><td>Company contact, login, rates</td><td>company_accounts</td><td>Contract</td></tr>
+<tr><td>Referrals</td><td>Referred friend's email + note</td><td>referrals</td><td>Consent [CONFIRM — referred person's data]</td></tr>
+<tr><td>Auth / security</td><td>Passkey credentials, sessions, approved devices</td><td>webauthn_credentials, admin_sessions, device approvals</td><td>Legitimate interest (security)</td></tr>
+</tbody></table>
+
+<h1>3. Data subjects' rights &amp; how to handle them</h1>
+<ul>
+<li><strong>Access (SAR):</strong> export the person's records across the tables in §2 (customer records keyed by customer_id/token; staff by staff_id). Respond within one month.</li>
+<li><strong>Rectification:</strong> correct via the admin console; changes are audited.</li>
+<li><strong>Erasure:</strong> honour <em>except</em> where a legal retention obligation applies (financial/payroll — see §4). Use soft-delete/tombstones; document what was retained and why.</li>
+<li><strong>Portability:</strong> provide data in a structured format (JSON/CSV export).</li>
+<li><strong>Objection / restriction:</strong> stop non-essential processing (e.g. marketing) on request.</li>
+<li>Log every request (who, when, what was done) for accountability.</li>
+</ul>
+
+<h1>4. Retention schedule [CONFIRM all periods]</h1>
+<table>
+<thead><tr><th>Data</th><th>Recommended retention</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Financial / accounting records (I&amp;E, invoices, payments)</td><td>6 years + current year</td><td>HMRC / Companies Act — overrides erasure</td></tr>
+<tr><td>Payroll records</td><td>6 years [CONFIRM — some guidance says longer]</td><td>Employment/tax law</td></tr>
+<tr><td>Customer job records</td><td>[CONFIRM — e.g. 6 years for contract/limitation, then delete/anonymise]</td><td>Contract + limitation period</td></tr>
+<tr><td>Communications logs</td><td>[CONFIRM — align to job record]</td><td>Evidence of service</td></tr>
+<tr><td>Marketing consents / referrals</td><td>Until withdrawn</td><td>Consent</td></tr>
+<tr><td>Auth/security logs</td><td>[CONFIRM — e.g. 12 months]</td><td>Security</td></tr>
+</tbody></table>
+<p>Note: the platform never hard-deletes financial data (soft-delete + tombstones), which supports the retention obligations above.</p>
+
+<h1>5. Processors &amp; third-party sharing</h1>
+<table>
+<thead><tr><th>Processor</th><th>Data shared</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>Supabase</td><td>All platform data</td><td>Database + file storage (EU region [CONFIRM])</td></tr>
+<tr><td>Stripe</td><td>Payment details, amounts, customer email</td><td>Card payments (Stripe holds card data — we do not)</td></tr>
+<tr><td>Twilio</td><td>Phone numbers, call/SMS content</td><td>Voice intake + SMS</td></tr>
+<tr><td>Google (Gmail API / Places)</td><td>Email content/recipients; addresses</td><td>Email send; address lookup</td></tr>
+<tr><td>Monzo</td><td>Bank transaction data (SMR accounts)</td><td>Reconciliation — read into I&amp;E</td></tr>
+<tr><td>Anthropic (Claude)</td><td>Enquiry text, receipt content, quote context</td><td>AI features. [CONFIRM no special-category data is sent; note API data-handling terms]</td></tr>
+</tbody></table>
+<p>[CONFIRM a data-processing agreement (DPA) is in place with each processor, and document international-transfer safeguards where applicable.]</p>
+
+<h1>6. Security measures</h1>
+<ul>
+<li>Service-role DB access server-side only; anon keys never shipped. Row-Level Security in force where applicable (see the RLS audit).</li>
+<li>Admin/accountant access behind password + device-approval gate (2FA-style); passkeys supported.</li>
+<li>Secrets in environment variables only; never committed. See Environment &amp; Config Reference.</li>
+<li>Backups hourly to a separate location; code in version control. See Operations &amp; Incident Runbook.</li>
+<li>Passwords stored hashed; bank details access restricted to payroll functions.</li>
+</ul>
+
+<h1>7. Personal data breach response</h1>
+<ol>
+<li>Contain — revoke affected credentials/devices/keys.</li>
+<li>Assess — what data, whose, how many, likely harm.</li>
+<li>Report to the ICO within <strong>72 hours</strong> if it's a reportable risk to individuals. [CONFIRM reporting route.]</li>
+<li>Notify affected individuals if high risk.</li>
+<li>Record the breach and remediation regardless of whether it's reportable.</li>
+</ol>
+
+<h1>8. DPIA</h1>
+<p>Given payroll, financial and banking data plus AI processing of enquiries, a short <strong>Data Protection Impact Assessment</strong> is advisable. [TO DO — assess whether large-scale/special-category processing triggers a mandatory DPIA; document the outcome.]</p>
+
+<h1>9. Open items to confirm</h1>
+<ul>
+<li>ICO data-protection fee registration status.</li>
+<li>Finalise all retention periods (§4).</li>
+<li>DPAs with each processor + data-region/transfer safeguards (§5).</li>
+<li>Customer-facing privacy notice published + linked from booking. [CONFIRM it exists and matches this.]</li>
+<li>Complete a DPIA (§8).</li>
+</ul>

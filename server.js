@@ -4,10 +4,24 @@
 // product apps (SMO removals, SMD dealer, SMC canvass) post events to.
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
+const auth = require('./lib/build-auth');
+const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage } = require('./lib/build-render');
+const buildStatus = require('./data/build-status');
+
+// Flatten every project's docs into a lookup for the gated /build/doc/:id route.
+const DOC_DIR = path.join(__dirname, 'docs-store');
+const docIndex = {};
+for (const pr of buildStatus.projects) {
+  for (const d of (pr.docs || [])) docIndex[d.id] = { ...d, project: pr.name };
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Behind Railway's proxy — needed for Secure cookies + correct client IP (login throttle).
+app.set('trust proxy', 1);
 
 // SMT hub datastore (Supabase). Optional at boot so the marketing site still serves
 // even before the hub DB is provisioned — hub endpoints return 503 until it is.
@@ -112,6 +126,135 @@ tr:nth-child(even){background:#0f131b}</style></head><body>
     console.error('[smt-hub] /hub error:', e.message);
     res.status(500).send('Error loading events.');
   }
+});
+
+// ── Internal build-status dashboard ───────────────────────────────────────────
+// Highly confidential (trade-secret) — TWO factors required: an ENROLLED device
+// (device cookie, installed only via a one-time link or bootstrap key) AND a named
+// login. Content is the living record in data/build-status.js, kept current in-repo.
+auth.setSupabase(supabase);
+
+const html = (res) => res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+// Enrolment: consume a one-time link (?t=) or bootstrap key (?key=) on THIS machine.
+app.get('/build/enroll', async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  let deviceToken = null;
+  if (req.query.t) deviceToken = await auth.enrollViaLink(String(req.query.t));
+  else if (req.query.key) deviceToken = await auth.enrollViaBootstrap(String(req.query.key));
+  if (!deviceToken) return res.status(403).send(renderNotApproved());
+  auth.setDeviceCookie(res, deviceToken, req.secure);
+  res.send(renderEnrolled());
+});
+
+// Login page — only shown on an approved device.
+app.get('/build/login', async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  if (!(await auth.deviceApproved(req))) return res.status(403).send(renderNotApproved());
+  if (auth.currentUser(req)) return res.redirect('/build');
+  res.send(renderLogin({ notConfigured: !auth.isConfigured() }));
+});
+
+app.post('/build/login', async (req, res) => {
+  if (!(await auth.deviceApproved(req))) return res.status(403).json({ error: 'This machine is not approved.' });
+  if (!auth.isConfigured()) return res.status(503).json({ error: 'Login not configured on the server.' });
+  const ip = req.ip || 'unknown';
+  if (auth.throttled(ip)) return res.status(429).json({ error: 'Too many attempts — wait a few minutes.' });
+  const { u, p } = req.body || {};
+  if (await auth.verifyPassword(u, p)) {
+    auth.noteSuccess(ip);
+    const user = String(u).toLowerCase();
+    const mustChange = await auth.userMustChange(user);
+    auth.setSessionCookie(res, auth.makeSession(user, mustChange), req.secure);
+    return res.json({ ok: true, mustChange });
+  }
+  auth.noteFailure(ip);
+  res.status(401).json({ error: 'Incorrect username or password.' });
+});
+
+app.post('/build/logout', (req, res) => {
+  auth.clearSessionCookie(res, req.secure);
+  res.json({ ok: true });
+});
+
+// Guard: require approved device AND valid session. If the user still owes a
+// password change, funnel every route to /build/password until it's done.
+async function requireDeviceAndSession(req, res, next) {
+  if (!(await auth.deviceApproved(req))) { html(res); return res.status(403).send(renderNotApproved()); }
+  const s = auth.sessionInfo(req);
+  if (!s) return res.redirect('/build/login');
+  if (s.mustChange && !req.path.startsWith('/build/password')) return res.redirect('/build/password');
+  req.buildUser = s.user;
+  next();
+}
+
+app.get('/build', requireDeviceAndSession, (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  res.send(renderDashboard(buildStatus, req.buildUser));
+});
+
+// Change own password (also the forced-change screen on first login / after a reset).
+app.get('/build/password', requireDeviceAndSession, (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  const s = auth.sessionInfo(req);
+  res.send(renderChangePassword({ user: req.buildUser, forced: !!(s && s.mustChange) }));
+});
+
+app.post('/build/password', requireDeviceAndSession, async (req, res) => {
+  const { oldPass, newPass } = req.body || {};
+  const result = await auth.changePassword(req.buildUser, oldPass, newPass);
+  if (!result.ok) return res.status(400).json(result);
+  // Re-issue the session without the must-change flag.
+  auth.setSessionCookie(res, auth.makeSession(req.buildUser, false), req.secure);
+  res.json({ ok: true });
+});
+
+// Device + user management (mint one-time link / revoke device / reset a user).
+app.get('/build/devices', requireDeviceAndSession, async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  const [devices, usersList] = await Promise.all([auth.listDevices(), auth.listUsers()]);
+  res.send(renderDevices(devices, usersList, req.buildUser));
+});
+
+app.post('/build/devices/new', requireDeviceAndSession, async (req, res) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const label = String((req.body && req.body.label) || '').slice(0, 60) || null;
+  const link = await auth.createEnrollLink(baseUrl, label, req.buildUser);
+  res.json({ ok: true, url: link.url });
+});
+
+app.post('/build/devices/revoke', requireDeviceAndSession, async (req, res) => {
+  const id = String((req.body && req.body.device_id) || '');
+  if (!id) return res.status(400).json({ error: 'device_id required' });
+  await auth.revokeDevice(id);
+  res.json({ ok: true });
+});
+
+// Serve a technical document (HTML reading page or inline PDF) behind the gate.
+app.get('/build/doc/:id', requireDeviceAndSession, (req, res) => {
+  const d = docIndex[req.params.id];
+  if (!d) return res.status(404).send('Document not found.');
+  const file = path.join(DOC_DIR, d.file);
+  if (!file.startsWith(DOC_DIR + path.sep) || !fs.existsSync(file)) return res.status(404).send('Document not found.');
+  res.setHeader('Cache-Control', 'no-store');
+  if (d.type === 'pdf') {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${d.id}.pdf"`);
+    return res.sendFile(file);
+  }
+  let body;
+  try { body = fs.readFileSync(file, 'utf8'); } catch { return res.status(404).send('Document not found.'); }
+  html(res);
+  res.send(renderDocPage(d, body));
+});
+
+// Admin recovery: reset another user's password → returns a temp password to hand over.
+app.post('/build/users/reset', requireDeviceAndSession, async (req, res) => {
+  const target = String((req.body && req.body.username) || '').toLowerCase();
+  if (!target) return res.status(400).json({ error: 'username required' });
+  const result = await auth.adminResetPassword(target, req.buildUser);
+  if (!result.ok) return res.status(400).json(result);
+  res.json({ ok: true, tempPassword: result.tempPassword });
 });
 
 // Static assets (1 hour cache; HTML revalidates)

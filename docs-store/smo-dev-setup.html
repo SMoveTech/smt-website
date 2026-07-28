@@ -1,0 +1,62 @@
+<p><strong>S-Move Operations — Developer Onboarding &amp; Local Setup</strong></p>
+<p>Get the platform running locally, make a change, and ship it. Assumes access to the GitHub repo and the SMO Supabase project.</p>
+<p><em>Draft 2026-07-28 from package.json and the working setup.</em></p>
+
+<h1>1. Stack</h1>
+<ul>
+<li><strong>Runtime:</strong> Node.js (recent LTS). Package name <code>smove-server</code>, entry <code>server.js</code>.</li>
+<li><strong>Framework:</strong> Express + express-ws (WebSockets), helmet, express-rate-limit.</li>
+<li><strong>Data:</strong> Supabase (@supabase/supabase-js), service-role server-side.</li>
+<li><strong>Key libraries:</strong> @anthropic-ai/sdk (Claude), stripe, twilio, googleapis (Gmail/Places), web-push, @simplewebauthn/server (passkeys), pdfkit / pdf-lib (documents), exceljs (payroll export), sharp (images), dotenv, javascript-obfuscator + html-minifier-terser (build).</li>
+</ul>
+
+<h1>2. Prerequisites</h1>
+<ul>
+<li>Node.js + npm, and git.</li>
+<li>Access to the GitHub repo (deploy source of truth) and the SMO Supabase project.</li>
+<li>The environment variables — see the <strong>Environment &amp; Config Reference</strong>. At minimum you need <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>APP_DOMAIN</code>, and the keys for whatever feature you're working on.</li>
+</ul>
+
+<h1>3. First run</h1>
+<ol>
+<li><code>git clone</code> the repo and <code>cd</code> into it.</li>
+<li><code>npm install</code></li>
+<li>Create a <strong><code>.env</code></strong> in the project root with the variables from the Environment reference. <code>dotenv</code> loads it automatically. <strong>Never commit <code>.env</code></strong> (it's gitignored).</li>
+<li><code>npm start</code> (runs <code>node server.js</code>). The server listens on <code>PORT</code> (set it in <code>.env</code>).</li>
+</ol>
+<p><strong>Port note:</strong> on the main dev machine port 3000 is reserved by the OS — use another port locally (the Claude Code preview uses an auto-port around 3939 with an <code>--env-file</code>). Watch for zombie <code>node</code> processes holding a port after a crash.</p>
+
+<h1>4. Build &amp; the dist/ folder</h1>
+<ul>
+<li><code>npm run build</code> (runs <code>build.js</code>) minifies/obfuscates front-end assets into <code>dist/</code>.</li>
+<li>The server serves <code>dist/</code> assets when present. For local development, if you want to see raw source changes without building, move <code>dist/</code> aside — otherwise you'll be looking at the last built output.</li>
+<li>Always edit <strong>source</strong>, never <code>dist/</code>; the build regenerates it on deploy.</li>
+</ul>
+
+<h1>5. Tests</h1>
+<ul>
+<li><code>npm test</code> runs the smoke test (<code>node --test tests/smoke.test.js</code>). Run before pushing.</li>
+<li>See the Test Plan for the broader QA approach.</li>
+</ul>
+
+<h1>6. Database &amp; migrations</h1>
+<ul>
+<li>Schema lives in Supabase. Four committed migrations are in <code>migrations/</code> (device approvals, accounting tables, photo rooms, receipts); the rest of the 35 tables are maintained directly in Supabase.</li>
+<li>Helper scripts exist for DB work: <code>migrate.js</code>, <code>backup.js</code>, <code>restore-from-recovery.js</code>, <code>excel-sync.js</code>. Read a script before running it — some touch live data.</li>
+<li><strong>Never</strong> point local dev at anything that writes over live customer/financial data. Respect the data-safety rules.</li>
+</ul>
+
+<h1>7. Deploy</h1>
+<ol>
+<li>Commit, then <strong>push to GitHub</strong> — Railway auto-deploys from GitHub only.</li>
+<li>Watch the deploy go green (see the Operations &amp; Incident Runbook).</li>
+<li>If the app looks stale afterwards, it's the PWA service-worker cache, not the deploy.</li>
+</ol>
+
+<h1>8. Gotchas</h1>
+<ul>
+<li><strong>Outbound must be IPv4</strong> — Railway's IPv6 egress is broken (undici <code>family:4</code>); affects Anthropic + email. Keep the Anthropic key unquoted.</li>
+<li><strong>Email</strong> goes via the Gmail API over HTTPS (Railway blocks SMTP).</li>
+<li><strong>Supabase free-tier throttle</strong> can return a misleading "Invalid API key" 401 when you burst queries — wait it out, don't rotate keys.</li>
+<li><strong>Login 403 before password</strong> = device gate; approve via <code>/admin/device-setup?key=…</code>.</li>
+</ul>

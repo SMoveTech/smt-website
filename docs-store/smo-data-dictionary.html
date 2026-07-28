@@ -1,0 +1,61 @@
+<p><strong>S-Move Operations — Data Dictionary</strong></p>
+<p>The 35 tables in the SMO Supabase PostgreSQL database: primary key, key fields, relationships and purpose. Field-level detail below the table for the four tables with committed migrations; the remainder are maintained directly in Supabase.</p>
+<p><em>Draft 2026-07-28, sourced from the Technical Architecture v2 schema section. Regenerate from Supabase (information_schema) when a full field-level dictionary is needed.</em></p>
+
+<h1>1. All tables</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>customers</strong></td><td>token, job_ref, job_type, name, contact, addresses, move_date, quote (JSONB), payment_status, booking_status, rota_confirmed</td><td>→ messages, shifts, payment_requests, date_changes, storage_containers, custom_quotes</td><td>Core job/customer record (~112 fields)</td></tr>
+<tr><td><strong>staff_members</strong></td><td>token, name, roles (JSONB), hourly_rate, password_hash, bank_details, absences (JSONB)</td><td>→ shifts, shift_applications, payslips</td><td>Staff profiles and HR data</td></tr>
+<tr><td><strong>shifts</strong></td><td>customer_id FK, date, role, status, assigned_staff_id FK, staff_start_time, staff_finish_time, crew_group, flex_task_id</td><td>→ customers, staff_members, shift_applications, flexible_tasks</td><td>Individual work slots per job/task per date</td></tr>
+<tr><td><strong>messages</strong></td><td>customer_id FK, sender, text, read, timestamp</td><td>→ customers</td><td>Customer ↔ admin portal chat</td></tr>
+<tr><td><strong>comm_logs</strong></td><td>customer_id FK, type (email/sms/call/note), subject, body, gmail_message_id</td><td>→ customers</td><td>All communication history</td></tr>
+<tr><td><strong>payment_requests</strong></td><td>customer_id FK, amount, method, status, payment_link</td><td>→ customers</td><td>Deposit/balance payment tracking</td></tr>
+<tr><td><strong>date_changes</strong></td><td>customer_id FK, preferred_date, alt_date, status</td><td>→ customers</td><td>Move-date change requests</td></tr>
+<tr><td><strong>packing_requests</strong></td><td>customer_id FK, type, details, status</td><td>→ customers</td><td>Additional packing service requests</td></tr>
+<tr><td><strong>storage_containers</strong></td><td>customer_id FK, container_number, location, date_in, pricing (JSONB), inventory, container_type</td><td>→ customers, storage_container_invoices</td><td>Individual storage container records</td></tr>
+<tr><td><strong>storage_container_invoices</strong></td><td>container_id FK, date, amount, description</td><td>→ storage_containers</td><td>Invoice line items per container</td></tr>
+<tr><td><strong>storage_container_payments</strong></td><td>container_id FK, date, amount, reference</td><td>→ storage_containers</td><td>Payment records per container</td></tr>
+<tr><td><strong>storage_invoice_records</strong></td><td>invoice_number, customer_id FK, container_ids (JSONB), period, line_items (JSONB), total_amount, paid</td><td>→ customers</td><td>Consolidated auto-generated monthly invoices</td></tr>
+<tr><td><strong>shared_container_registry</strong></td><td>container_number, location, capacity_status</td><td>—</td><td>Global index of shared containers</td></tr>
+<tr><td><strong>flexible_tasks</strong></td><td>type, customer_id FK, label, address, status, scheduled_date, crew_group, completed_by</td><td>→ customers, staff_members</td><td>Adhoc tasks not tied to a customer move</td></tr>
+<tr><td><strong>payslips</strong></td><td>staff_id FK, week_ending, data (JSONB: hours, gross, net)</td><td>→ staff_members</td><td>Weekly payroll records</td></tr>
+<tr><td><strong>custom_quotes</strong></td><td>customer_id FK, title, line_items (JSONB), type, status, pdf_path</td><td>→ customers</td><td>One-off custom quotes/invoices</td></tr>
+<tr><td><strong>company_accounts</strong></td><td>company_name, login_email, rates (JSONB), token, password_hash</td><td>→ staff_hire_requests, vehicle_hires</td><td>Partner company accounts</td></tr>
+<tr><td><strong>staff_hire_requests</strong></td><td>company_account_id FK, customer_id FK, requested_date, qty_drivers, qty_porters, status</td><td>→ company_accounts</td><td>Company staff-hire orders</td></tr>
+<tr><td><strong>vehicle_hires</strong></td><td>company_account_id FK, hire_date, vehicle_type, cost</td><td>→ company_accounts</td><td>Company vehicle rental</td></tr>
+<tr><td><strong>vehicles</strong></td><td>reg (unique), make, model, year, insurance (JSONB), mot (JSONB)</td><td>→ vehicle_maintenance</td><td>Company fleet registry</td></tr>
+<tr><td><strong>vehicle_maintenance</strong></td><td>vehicle_id FK, date, description, cost, garage</td><td>→ vehicles</td><td>Fleet maintenance records</td></tr>
+<tr><td><strong>shift_applications</strong></td><td>shift_id FK, staff_id FK, status (pending/accepted/rejected)</td><td>→ shifts, staff_members</td><td>Staff applications for open shifts</td></tr>
+<tr><td><strong>webauthn_credentials</strong></td><td>user_type, user_id, credential_id (unique), public_key, counter</td><td>—</td><td>Passkey credentials</td></tr>
+<tr><td><strong>income_expenditure</strong></td><td>txn_date, description, category, amount_in, amount_out, source, monzo_txn_id</td><td>—</td><td>Financial ledger (I&amp;E)</td></tr>
+<tr><td><strong>monzo_tokens</strong></td><td>id=1, tokens (JSONB), updated_at</td><td>—</td><td>Monzo OAuth token store (single row)</td></tr>
+<tr><td><strong>gmail_tokens</strong></td><td>id=1, tokens (JSONB)</td><td>—</td><td>Gmail OAuth token store (single row)</td></tr>
+<tr><td><strong>admin_sessions</strong></td><td>token_hash (unique), expires_at</td><td>—</td><td>Active admin sessions</td></tr>
+<tr><td><strong>diary_entries</strong></td><td>date, title, notes</td><td>—</td><td>Admin calendar entries</td></tr>
+<tr><td><strong>team_rosters</strong></td><td>date, team, staff (JSONB), settings (JSONB)</td><td>—</td><td>Daily team roster records</td></tr>
+<tr><td><strong>rota_orders</strong></td><td>date, team, customer_ids (JSONB)</td><td>—</td><td>Rota assignment priority order</td></tr>
+<tr><td><strong>pricing</strong></td><td>id=1, small_box, large_box, tape_roll, bubble_wrap</td><td>—</td><td>Packing material prices (single row)</td></tr>
+<tr><td><strong>referrals</strong></td><td>referrer_id FK, friend_email, personal_note, followup_sent_at</td><td>→ customers</td><td>Customer referral tracking</td></tr>
+<tr><td><strong>bug_reports</strong></td><td>token, description, context (JSONB), severity, submitted_at</td><td>—</td><td>Customer bug submissions</td></tr>
+<tr><td><strong>storage_return_requests</strong></td><td>customer_id FK, container_ids (JSONB), preferred_date, status</td><td>→ customers</td><td>Storage return requests</td></tr>
+<tr><td><strong>comm_log_tombstones</strong></td><td>original_id, customer_id</td><td>—</td><td>Soft-deleted comm-log records</td></tr>
+</tbody></table>
+
+<h1>2. Notes &amp; conventions</h1>
+<ul>
+<li><strong>Single-row config tables</strong> (<code>monzo_tokens</code>, <code>gmail_tokens</code>, <code>pricing</code>) use a fixed <code>id=1</code> row.</li>
+<li><strong>JSONB</strong> is used heavily for flexible/nested data (quotes, roles, pricing, absences, payslip data, inventories). Treat as semi-structured; validate on write.</li>
+<li><strong>Soft-delete:</strong> financial and comm data is never hard-deleted — see <code>comm_log_tombstones</code> and the data-safety layer. Never hard-delete financial records.</li>
+<li><strong>PII-bearing tables</strong> (for GDPR mapping): customers, staff_members (bank_details, password_hash), payslips, comm_logs, messages, referrals, company_accounts. See the Data Protection doc.</li>
+</ul>
+
+<h1>3. Field-level detail (committed migrations)</h1>
+<p>Four tables have committed SQL migrations in <code>migrations/</code>; the rest are maintained directly in Supabase. For a complete field-level dictionary, generate from <code>information_schema.columns</code> against the live database.</p>
+<ul>
+<li><code>device_approvals.sql</code> — approved admin devices (device gate / 2FA).</li>
+<li><code>accounting_tables.sql</code> — financial/accounting structures (I&amp;E and related).</li>
+<li><code>photo_rooms.sql</code> — room photo/inventory capture.</li>
+<li><code>receipts.sql</code> — Monzo receipt → VAT extraction store.</li>
+</ul>

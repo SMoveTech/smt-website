@@ -1,0 +1,122 @@
+<p><strong>S-Move Operations — Environment &amp; Configuration Reference</strong></p>
+<p>Every environment variable, secret and external endpoint the platform depends on. Set on the Railway service (Variables tab). Values are never stored here — this lists the <em>names</em>, what they do, and where they come from.</p>
+<p><em>Draft generated 2026-07-28 from the codebase (grep of <code>process.env</code>). Confirm against the live Railway variables before relying on it.</em></p>
+
+<h1>1. Core / platform</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>PORT</td><td>HTTP port the server listens on</td><td>Set by Railway automatically</td></tr>
+<tr><td>NODE_ENV</td><td>Runtime mode (production / development)</td><td>Gates dev-only shortcuts in middleware</td></tr>
+<tr><td>APP_DOMAIN</td><td>Public base URL (app.s-move.co.uk)</td><td>Used for links, OAuth redirects, webhooks, PDFs — must be exact</td></tr>
+<tr><td>STAFF_PORTAL_URL</td><td>Staff portal base URL</td><td>Links in staff comms</td></tr>
+<tr><td>PYTHON_PATH</td><td>Path to the Python used by the shift exporter</td><td>Excel export helper</td></tr>
+</tbody></table>
+
+<h1>2. Database &amp; storage (Supabase)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>SUPABASE_URL</td><td>Supabase project URL</td><td>SMO project (not the shared Dealer project)</td></tr>
+<tr><td>SUPABASE_SERVICE_ROLE_KEY</td><td>Server-side service-role key</td><td>Full DB + Storage access — server only, never shipped to clients</td></tr>
+</tbody></table>
+
+<h1>3. AI (Anthropic Claude)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ANTHROPIC_API_KEY</td><td>Claude API key (quotes AI, co-pilot, receipt/VAT extraction, phone intake)</td><td>Store unquoted. <code>ANTHROPIC_KEY</code> is a legacy alias still read as a fallback</td></tr>
+</tbody></table>
+
+<h1>4. Payments (Stripe)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>STRIPE_SECRET_KEY</td><td>Server-side Stripe key (create payment links, reconcile)</td><td>SMR account</td></tr>
+<tr><td>STRIPE_PUBLISHABLE_KEY</td><td>Client-side Stripe key</td><td>Safe to expose in the browser</td></tr>
+<tr><td>STRIPE_WEBHOOK_SECRET</td><td>Verifies incoming Stripe webhooks</td><td>Must match the webhook endpoint configured in Stripe</td></tr>
+</tbody></table>
+
+<h1>5. Banking (Monzo)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>MONZO_CLIENT_ID</td><td>Monzo OAuth client ID (bank sync + reconcile)</td><td>Imports SMR accounts only (allowlist)</td></tr>
+<tr><td>MONZO_CLIENT_SECRET</td><td>Monzo OAuth client secret</td><td>Tokens stored in the <code>monzo_tokens</code> table; SCA re-auth ~every 90 days</td></tr>
+</tbody></table>
+
+<h1>6. Telephony &amp; SMS (Twilio)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>TWILIO_ACCOUNT_SID</td><td>Twilio account SID (voice intake + SMS)</td><td></td></tr>
+<tr><td>TWILIO_AUTH_TOKEN</td><td>Twilio auth token; also validates inbound webhooks</td><td></td></tr>
+<tr><td>TWILIO_FROM_NUMBER</td><td>Sending number for outbound SMS</td><td></td></tr>
+</tbody></table>
+
+<h1>7. Email (Gmail API + legacy SMTP)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>GOOGLE_CLIENT_ID</td><td>Google OAuth client ID (Gmail send over HTTPS)</td><td>Railway blocks outbound SMTP — email goes via Gmail API</td></tr>
+<tr><td>GOOGLE_CLIENT_SECRET</td><td>Google OAuth client secret</td><td>Tokens stored in <code>gmail_tokens</code></td></tr>
+<tr><td>EMAIL_USER</td><td>From-address / legacy SMTP user</td><td>Legacy fallback; Gmail API is primary</td></tr>
+<tr><td>EMAIL_PASS</td><td>Legacy SMTP app password</td><td>Legacy fallback only</td></tr>
+</tbody></table>
+
+<h1>8. Google services &amp; geo</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>GOOGLE_PLACES_API_KEY</td><td>Address autocomplete / place lookups</td><td></td></tr>
+<tr><td>GOOGLE_SERVER_KEY</td><td>Server-side Google API key</td><td></td></tr>
+<tr><td>GOOGLE_PLACE_ID</td><td>The business's Google Place ID</td><td>Reviews / listing</td></tr>
+<tr><td>W3W_API_KEY</td><td>what3words lookups</td><td>Precise address pinning</td></tr>
+</tbody></table>
+
+<h1>9. Web push (VAPID)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>VAPID_PUBLIC_KEY</td><td>Web-push public key</td><td>Browser push notifications</td></tr>
+<tr><td>VAPID_PRIVATE_KEY</td><td>Web-push private key</td><td>Server only</td></tr>
+</tbody></table>
+
+<h1>10. Alerts (SMS to owners)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ADMIN_ALERT_NUMBERS</td><td>Numbers texted on key admin events</td><td>Comma-separated; 8am–9pm window</td></tr>
+<tr><td>OWNER_ALERT_NUMBER</td><td>Owner escalation number</td><td>Watchdog / critical alerts</td></tr>
+<tr><td>ALERT_SMS_NUMBER</td><td>Backup/watchdog alert recipient</td><td>Used by backup.js</td></tr>
+<tr><td>DEALER_ALERT_NUMBERS</td><td>Numbers for Dealer-related alerts</td><td>Cross-product</td></tr>
+</tbody></table>
+
+<h1>11. Security &amp; access</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ACCOUNTANT_PASSWORD</td><td>Accountant portal password</td><td>Behind the device-invite gate as well</td></tr>
+<tr><td>ADMIN_DEVICE_SETUP_KEY</td><td>Key to approve a new admin device</td><td>Unblock lockouts via <code>/admin/device-setup?key=…</code></td></tr>
+<tr><td>SYNC_SECRET</td><td>Protects internal sync endpoints</td><td>Server-to-server</td></tr>
+</tbody></table>
+
+<h1>12. Cross-product (SMD / SMT hub)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>SMD_URL</td><td>S-Move Dealer base URL</td><td>Cross-product links</td></tr>
+<tr><td>SMT_HUB_URL</td><td>SMT hub base URL</td><td>Lead-event reporting spine</td></tr>
+<tr><td>SMT_INGEST_KEY</td><td>Key to POST events to the SMT hub</td><td>Must match the hub's ingest key</td></tr>
+<tr><td>DEALER_API_KEY</td><td>Auth key for Dealer API calls</td><td></td></tr>
+<tr><td>DEALER_SHOP_ADDRESS</td><td>SMD shop address used by SMO</td><td></td></tr>
+</tbody></table>
+
+<h1>13. Rotation &amp; handling</h1>
+<ul>
+<li><strong>Never commit secrets</strong> — all values live only in Railway Variables (and locally in an untracked <code>.env</code>).</li>
+<li><strong>Monzo</strong> re-authorises roughly every 90 days (Strong Customer Authentication) — see the Operations &amp; Incident Runbook for the re-auth steps.</li>
+<li><strong>Stripe webhook secret</strong> must be re-copied if the webhook endpoint is recreated.</li>
+<li><strong>Force IPv4 on all outbound</strong> (undici family:4) — Railway's IPv6 egress is broken; this affects Anthropic + any SMTP path.</li>
+<li>If a key is rotated at the provider, update Railway and redeploy — the app reads env at boot.</li>
+</ul>

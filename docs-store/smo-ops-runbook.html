@@ -1,0 +1,74 @@
+<p><strong>S-Move Operations — Operations &amp; Incident Runbook</strong></p>
+<p>How to deploy, roll back, and recover the platform — and every known failure mode with its fix. If something looks broken, start with §4: most "outages" are a known, benign cause.</p>
+<p><em>Draft 2026-07-28 from operational history. Keep current whenever a new failure mode or fix is learned.</em></p>
+
+<h1>1. Platform at a glance</h1>
+<table>
+<thead><tr><th>Component</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>App hosting</td><td>Railway (auto-deploys from the GitHub main branch)</td></tr>
+<tr><td>Live URL</td><td>app.s-move.co.uk</td></tr>
+<tr><td>Database + storage</td><td>Supabase (SMO project) — service-role, server-side only</td></tr>
+<tr><td>Code repo</td><td>GitHub (deploy source of truth)</td></tr>
+<tr><td>Backups</td><td>Hourly Supabase export → D:\S-Move Backups (Scheduled Task "S-Move Hourly Backup"); code = GitHub</td></tr>
+<tr><td>Integrations</td><td>Stripe, Twilio, Claude, Monzo, Gmail API, Google Places, what3words — see Environment &amp; Config Reference</td></tr>
+</tbody></table>
+
+<h1>2. Deploy / release</h1>
+<ol>
+<li>Commit to the repo and <strong>push to GitHub</strong> — Railway deploys from GitHub only; a local commit that isn't pushed does nothing.</li>
+<li>Edit <strong>source</strong> files; the build regenerates <code>dist/</code> on deploy. Don't edit <code>dist/</code> directly.</li>
+<li>Watch the Railway deploy go <strong>green</strong>. If the app still looks wrong after green, it's almost always the PWA/service-worker cache, not the deploy (see §4).</li>
+<li>Verify a key path (load the admin console, send a test action) before considering it done.</li>
+</ol>
+
+<h1>3. Rollback</h1>
+<ul>
+<li><strong>Fast path:</strong> <code>git revert &lt;bad commit&gt;</code> then push — Railway redeploys the reverted state.</li>
+<li><strong>Deeper:</strong> the <code>pre-refactor-backup</code> tag on GitHub marks the state before the server.js split — restore from there if a structural change went wrong.</li>
+<li><strong>Never</strong> restore/overwrite data files (smove_data.json) or customer data to "fix" a code bug — fix the code. Data restore is a separate, deliberate action (§6).</li>
+</ul>
+
+<h1>4. Known failure modes &amp; fixes</h1>
+<p><strong>Work through these before assuming a real outage.</strong></p>
+<table>
+<thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>App "looks broken" right after a deploy that went green</td><td>Stale PWA / service-worker cache on the device — NOT the deploy</td><td>Hard refresh; clear the app's cache / bump the service-worker version. The deploy is fine.</td></tr>
+<tr><td>Bank sync / financial import stopped; Monzo calls failing</td><td>Monzo Strong Customer Authentication expired (~every 90 days)</td><td>Re-authorise Monzo via the OAuth flow in the Financials area; tokens refresh into the <code>monzo_tokens</code> table.</td></tr>
+<tr><td>Outbound calls fail — "Premature close" / ENETUNREACH (Anthropic, email)</td><td>Railway's IPv6 egress is broken</td><td>Force IPv4 on all outbound (undici <code>family:4</code>). Ensure the Anthropic key is stored <em>unquoted</em>.</td></tr>
+<tr><td>Sudden "Invalid API key" 401s from Supabase while prod seems otherwise fine</td><td>Free-tier IP throttle from bursting queries — the 401 is misleading</td><td>Wait it out. Do NOT rotate the key or touch <code>.env</code> — the key is fine.</td></tr>
+<tr><td>"Can't log in" — rejected before the password is checked (403)</td><td>Admin device gate, not a bad password</td><td>Approve the device: <code>/admin/device-setup?key=&lt;ADMIN_DEVICE_SETUP_KEY&gt;</code>.</td></tr>
+<tr><td>Emails not sending</td><td>Railway blocks outbound SMTP</td><td>Email must go via the Gmail API over HTTPS (GOOGLE_CLIENT_ID/SECRET + gmail_tokens). EMAIL_USER/PASS is legacy fallback only.</td></tr>
+<tr><td>Accountant can't reach the portal</td><td>Device-invite gate (intended 2FA)</td><td>Issue/approve the accountant device invite — this is expected behaviour, not a bug.</td></tr>
+</tbody></table>
+
+<h1>5. Monitoring &amp; alerts</h1>
+<ul>
+<li><strong>adminAlert()</strong> texts the owner numbers on key events (new customer, quote accepted, call-me, messages, requests, inventory) within an 8am–9pm window. Recipients: <code>ADMIN_ALERT_NUMBERS</code>.</li>
+<li><strong>Watchdog / critical</strong> alerts escalate to <code>OWNER_ALERT_NUMBER</code>; backup alerts use <code>ALERT_SMS_NUMBER</code>.</li>
+<li>If alerts go silent, check Twilio balance/credentials and the 8am–9pm gate before assuming nothing happened.</li>
+</ul>
+
+<h1>6. Backup &amp; restore</h1>
+<ul>
+<li><strong>Data:</strong> hourly Supabase export to D:\S-Move Backups via the "S-Move Hourly Backup" scheduled task (silent/S4U). Backups are sacred — never disable without a replacement.</li>
+<li><strong>Code:</strong> GitHub is the backup — every deploy is a commit.</li>
+<li><strong>Restore:</strong> use <code>restore-from-recovery.js</code> / <code>backup.js</code> against a chosen backup. Restore is deliberate and approved — never as a reflex to a code bug. Confirm the target before overwriting anything.</li>
+<li><strong>Financial data</strong> is never hard-deleted (soft-delete + tombstones + purge policy). Respect the entity boundary (5 Jun) and VAT boundary (1 Jul).</li>
+</ul>
+
+<h1>7. Periodic / scheduled work</h1>
+<ul>
+<li>Hourly: Supabase backup.</li>
+<li>~Every 90 days: Monzo SCA re-authorisation (§4).</li>
+<li>Monthly: consolidated storage invoices auto-generate (<code>storage_invoice_records</code>).</li>
+<li>Ongoing: VAT columns/reconciliation live from 1 Jul 2026 (standard 20%).</li>
+</ul>
+
+<h1>8. Escalation</h1>
+<ul>
+<li>Owner: Alex Sisson — 07880 332742 — alex@s-move.co.uk.</li>
+<li>Second: Dave S (co-owner).</li>
+<li>Provider status: check Railway, Supabase, Twilio, Stripe and Monzo status pages before deep-diving a suspected outage.</li>
+</ul>
