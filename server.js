@@ -7,9 +7,10 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const auth = require('./lib/build-auth');
-const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup } = require('./lib/build-render');
+const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup, renderBrandLibrary } = require('./lib/build-render');
 const buildStatus = require('./data/build-status');
 const copilot = require('./lib/copilot');
+const brandAssets = require('./lib/brand-assets');
 
 // Flatten every project's docs into a lookup for the gated /build/doc/:id route.
 const DOC_DIR = path.join(__dirname, 'docs-store');
@@ -271,6 +272,33 @@ app.post('/build/copilot', requireDeviceAndSession, async (req, res) => {
   } catch (e) {
     console.error('[copilot] error:', e.message);
     res.status(500).json({ error: 'Co-pilot hit an error — try again in a moment.' });
+  }
+});
+
+// ── Brand assets: logged-in gallery streamed from the private SMD bucket ───────
+app.get('/build/brand', requireDeviceAndSession, async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  if (!brandAssets.enabled()) return res.status(503).send('Brand library not configured yet (set SMD_SUPABASE_URL + SMD_SUPABASE_KEY).');
+  try {
+    const manifest = await brandAssets.listAssets();
+    res.send(renderBrandLibrary(manifest, req.buildUser));
+  } catch (e) {
+    console.error('[brand] list failed:', e.message);
+    res.status(500).send('Could not load brand assets.');
+  }
+});
+
+app.get('/build/brand/file', requireDeviceAndSession, async (req, res) => {
+  if (!brandAssets.enabled()) return res.status(503).send('Brand library not configured.');
+  const p = String(req.query.path || '');
+  try {
+    const asset = await brandAssets.downloadAsset(p);
+    res.setHeader('Content-Type', asset.contentType);
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    if (req.query.dl) res.setHeader('Content-Disposition', `attachment; filename="${asset.filename}"`);
+    res.send(asset.buffer);
+  } catch (e) {
+    res.status(e.message === 'unknown asset' ? 404 : 500).send(e.message === 'unknown asset' ? 'Not found.' : 'Error.');
   }
 });
 

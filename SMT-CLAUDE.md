@@ -80,6 +80,11 @@ brand of whoever it's from:
 
 If you're unsure which brand a piece belongs to, ask before publishing.
 
+**Logos & graphics:** the build page has a **Brand assets** library (top nav → 🎨 Brand
+assets, or `/build/brand`) with per-brand logos and marks. Downloads are private (only
+work while you're logged into `/build`). To use one on another machine: log in, download
+the asset, then drop it into your project for Claude to use.
+
 ---
 
 ## 2. House technology stack (match it — don't substitute)
