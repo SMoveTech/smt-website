@@ -44,6 +44,10 @@ been checked. Stay inside them and you can't break anything that matters.
 - **Ownership.** Everything built, written, or generated using an SMT Claude
   account or seat — code, designs, copy, artwork, and any other work product — is
   the property of **S-Move Technologies Ltd**.
+- **Activity logging.** Sessions on SMT Claude seats are activity-logged: at the
+  start of each session your Claude reports which **project folder** you're working
+  in, your name, the model, and the time to the SMT dashboard — for coordination
+  and oversight. The **content** of your work is not logged.
 
 ---
 

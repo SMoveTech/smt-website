@@ -7,12 +7,13 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const auth = require('./lib/build-auth');
-const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup, renderBrandLibrary, renderHealth } = require('./lib/build-render');
+const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup, renderBrandLibrary, renderHealth, renderActivity } = require('./lib/build-render');
 const buildStatus = require('./data/build-status');
 const copilot = require('./lib/copilot');
 const brandAssets = require('./lib/brand-assets');
 const { zipStore } = require('./lib/zip');
 const health = require('./lib/health');
+const activity = require('./lib/activity');
 
 // Flatten every project's docs into a lookup for the gated /build/doc/:id route.
 const DOC_DIR = path.join(__dirname, 'docs-store');
@@ -103,6 +104,26 @@ app.post('/api/events', async (req, res) => {
     console.error('[smt-hub] event insert failed:', e.message);
     res.status(500).json({ error: 'insert_failed' });
   }
+});
+
+// ── Claude Code seat-activity ingest ──────────────────────────────────────────
+// Staff Claude Code posts here on session start (SessionStart HTTP hook).
+// Key-gated (Bearer SMT_ACTIVITY_KEY); logs who/project/model/when (not content).
+app.post('/api/activity', async (req, res) => {
+  if (!activity.keyOk(req)) return res.status(403).json({ error: 'forbidden' });
+  const b = req.body || {};
+  const cwd = String(b.cwd || '');
+  const project = cwd ? cwd.replace(/[\\/]+$/, '').split(/[\\/]/).pop() : null;
+  const user = String(req.headers['x-smt-user'] || '').slice(0, 60) || null;
+  await activity.log({
+    user_label: user,
+    project: project ? project.slice(0, 120) : null,
+    cwd: cwd.slice(0, 400) || null,
+    session_id: String(b.session_id || '').slice(0, 120) || null,
+    model: String(b.model || '').slice(0, 60) || null,
+    source: String(b.source || '').slice(0, 20) || null,
+  });
+  res.json({ ok: true });
 });
 
 // ── SMT HUB: minimal protected event viewer ───────────────────────────────────
@@ -312,6 +333,13 @@ app.get('/build/brand/file', requireDeviceAndSession, async (req, res) => {
   }
 });
 
+// ── Claude Code seat-activity log (gated) ─────────────────────────────────────
+app.get('/build/activity', requireDeviceAndSession, async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  const rows = activity.enabled() ? await activity.recent(200) : [];
+  res.send(renderActivity(rows, req.buildUser, { configured: activity.configured() }));
+});
+
 // ── Deploy health dashboard (gated) ────────────────────────────────────────────
 app.get('/build/health', requireDeviceAndSession, async (req, res) => {
   html(res); res.setHeader('Cache-Control', 'no-store');
@@ -360,27 +388,60 @@ app.get('/build/claude-bundle', requireDeviceAndSession, async (req, res) => {
       assetNote = '(brand assets not bundled — SMD storage is not configured on the server yet)';
     }
 
+    // Ready-made settings hook — reports session activity (project/user/when).
+    const settingsSnippet = {
+      hooks: {
+        SessionStart: [
+          {
+            matcher: 'startup',
+            hooks: [
+              {
+                type: 'http',
+                url: 'https://smt.s-move.co.uk/api/activity',
+                headers: {
+                  'Authorization': 'Bearer ' + (process.env.SMT_ACTIVITY_KEY || 'ASK-ALEX-FOR-THE-KEY'),
+                  'X-SMT-User': 'REPLACE-WITH-YOUR-NAME',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    files.push({ name: 'claude-settings.json', buffer: Buffer.from(JSON.stringify(settingsSnippet, null, 2)) });
+
     const readme = [
       'S-MOVE TECHNOLOGIES — Claude Code setup bundle',
       '===============================================',
       '',
       'This bundle contains:',
-      '  - CLAUDE.md            The SMT team guide (how we build).',
-      '  - smt-brand-assets/    Brand logos & graphics, by brand (smr/ smd/ smt/).',
-      '  - README.txt           This file.',
+      '  - CLAUDE.md              The SMT team guide (how we build).',
+      '  - smt-brand-assets/      Brand logos & graphics, by brand (smr/ smd/ smt/).',
+      '  - claude-settings.json   A Claude Code hook that logs which project you work on.',
+      '  - README.txt             This file.',
       '',
       'INSTALL (Windows):',
       '  1. Put CLAUDE.md in your Claude folder:  C:\\Users\\<your-name>\\.claude\\CLAUDE.md',
       '     (If one already exists, paste this content underneath what is there.)',
       '  2. Put the smt-brand-assets folder alongside it:',
       '     C:\\Users\\<your-name>\\.claude\\smt-brand-assets\\',
+      '  3. Set up activity logging (see below) with claude-settings.json.',
       '  (Mac/Linux: ~/.claude/CLAUDE.md and ~/.claude/smt-brand-assets/)',
       '',
       'Then Claude Code reads CLAUDE.md automatically in every project, and can copy the',
       'right brand logo from smt-brand-assets/ into your work when needed.',
       '',
+      'ACTIVITY LOGGING (claude-settings.json):',
+      '  1. Open claude-settings.json and change "X-SMT-User" to your name (e.g. dave-s).',
+      '  2. If you have NO ~/.claude/settings.json, save this file there as settings.json.',
+      '     If you already have one, merge the "hooks" block into it (your Claude can do',
+      '     this for you — just ask it to merge claude-settings.json into your settings).',
+      '  This reports, at the start of each session, which PROJECT FOLDER you are working',
+      '  in, your name, the model and the time — NOT the content of your work. It keeps the',
+      '  team coordinated on who is working on what.',
+      '',
       'OWNERSHIP: anything built using an SMT Claude account or seat is the property of',
-      'S-Move Technologies Ltd.',
+      'S-Move Technologies Ltd. Sessions on SMT seats are activity-logged as described above.',
       '',
       assetNote,
       '',
