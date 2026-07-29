@@ -41,6 +41,9 @@ been checked. Stay inside them and you can't break anything that matters.
   Alex before doing anything.** When unsure whether something is "yours" to
   change, assume it is not, and ask.
 - Backups are sacred: never delete or overwrite backup data.
+- **Ownership.** Everything built, written, or generated using an SMT Claude
+  account or seat — code, designs, copy, artwork, and any other work product — is
+  the property of **S-Move Technologies Ltd**.
 
 ---
 
