@@ -80,10 +80,13 @@ brand of whoever it's from:
 
 If you're unsure which brand a piece belongs to, ask before publishing.
 
-**Logos & graphics:** the build page has a **Brand assets** library (top nav → 🎨 Brand
-assets, or `/build/brand`) with per-brand logos and marks. Downloads are private (only
-work while you're logged into `/build`). To use one on another machine: log in, download
-the asset, then drop it into your project for Claude to use.
+**Logos & graphics:** if you installed via the setup bundle, the brand logos are already
+on your machine in your Claude folder at `smt-brand-assets/` (Windows:
+`C:\Users\<you>\.claude\smt-brand-assets\`), organised `smr/ smd/ smt/` with a
+`manifest.json`. Use those directly &mdash; copy the correct brand's logo into a build when
+one's needed (see the Brand colours rule above for which brand). If you don't have the
+folder, get it from the build page: top nav → 🎨 Brand assets (`/build/brand`), or
+re-download the setup bundle from → 📚 Claude Code guide.
 
 ---
 

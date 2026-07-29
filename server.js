@@ -11,6 +11,7 @@ const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderD
 const buildStatus = require('./data/build-status');
 const copilot = require('./lib/copilot');
 const brandAssets = require('./lib/brand-assets');
+const { zipStore } = require('./lib/zip');
 
 // Flatten every project's docs into a lookup for the gated /build/doc/:id route.
 const DOC_DIR = path.join(__dirname, 'docs-store');
@@ -317,6 +318,65 @@ app.get('/build/claude-md', requireDeviceAndSession, (req, res) => {
   res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="SMT-CLAUDE.md"');
   res.sendFile(file);
+});
+
+// Full setup bundle: CLAUDE.md + brand assets + README, as one ZIP. Lets a staff
+// member install the guide AND get the logos locally in one download.
+app.get('/build/claude-bundle', requireDeviceAndSession, async (req, res) => {
+  try {
+    const files = [];
+    const guide = path.join(__dirname, 'SMT-CLAUDE.md');
+    if (fs.existsSync(guide)) files.push({ name: 'CLAUDE.md', buffer: fs.readFileSync(guide) });
+
+    let assetNote;
+    if (brandAssets.enabled()) {
+      try {
+        const manifest = await brandAssets.listAssets();
+        files.push({ name: 'smt-brand-assets/manifest.json', buffer: Buffer.from(JSON.stringify(manifest, null, 2)) });
+        for (const a of (manifest.assets || [])) {
+          const d = await brandAssets.downloadAsset(a.path);
+          files.push({ name: 'smt-brand-assets/' + a.path, buffer: d.buffer });
+        }
+        assetNote = `${(manifest.assets || []).length} brand assets are included under smt-brand-assets/.`;
+      } catch (e) { assetNote = `(brand assets could not be bundled this time: ${e.message})`; }
+    } else {
+      assetNote = '(brand assets not bundled — SMD storage is not configured on the server yet)';
+    }
+
+    const readme = [
+      'S-MOVE TECHNOLOGIES — Claude Code setup bundle',
+      '===============================================',
+      '',
+      'This bundle contains:',
+      '  - CLAUDE.md            The SMT team guide (how we build).',
+      '  - smt-brand-assets/    Brand logos & graphics, by brand (smr/ smd/ smt/).',
+      '  - README.txt           This file.',
+      '',
+      'INSTALL (Windows):',
+      '  1. Put CLAUDE.md in your Claude folder:  C:\\Users\\<your-name>\\.claude\\CLAUDE.md',
+      '     (If one already exists, paste this content underneath what is there.)',
+      '  2. Put the smt-brand-assets folder alongside it:',
+      '     C:\\Users\\<your-name>\\.claude\\smt-brand-assets\\',
+      '  (Mac/Linux: ~/.claude/CLAUDE.md and ~/.claude/smt-brand-assets/)',
+      '',
+      'Then Claude Code reads CLAUDE.md automatically in every project, and can copy the',
+      'right brand logo from smt-brand-assets/ into your work when needed.',
+      '',
+      assetNote,
+      '',
+      'Grab a fresh bundle from the build page whenever things are updated.',
+    ].join('\n');
+    files.push({ name: 'README.txt', buffer: Buffer.from(readme, 'utf8') });
+
+    const zip = zipStore(files);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="smt-claude-setup.zip"');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(zip);
+  } catch (e) {
+    console.error('[bundle] failed:', e.message);
+    res.status(500).send('Could not build the setup bundle.');
+  }
 });
 
 // Static assets (1 hour cache; HTML revalidates)
