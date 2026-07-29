@@ -67,6 +67,21 @@ community-first. Keep that spirit in any copy you write.
 
 ---
 
+## Brand colours (keep work on-brand)
+
+Match customer- and public-facing work &mdash; emails, pages, decks, assets &mdash; to the
+brand of whoever it's from:
+
+- **SMT** &mdash; **blue** (the current SMT-website blue: primary `#5b8def`, cyan `#22d3ee`,
+  on dark ink `#0a0e17`). Placeholder until a dedicated SMT palette is set.
+- **SMD (S-Move Dealer)** &mdash; **gold** `#c8924a` on black / charcoal.
+- **SMR (S-Move Removals)** &mdash; **red `#ed1c24` / black**.
+- **SMO** &mdash; currently uses the **SMR** brand (red/black) until it gets its own.
+
+If you're unsure which brand a piece belongs to, ask before publishing.
+
+---
+
 ## 2. House technology stack (match it — don't substitute)
 
 - **Backend:** Node.js + Express. Small apps start as a single `server.js`.
