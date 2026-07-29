@@ -61,6 +61,14 @@ app.use((req, res, next) => {
 // Health check for Railway
 app.get('/healthz', (_req, res) => res.status(200).send('ok'));
 
+// Public system-status page (current health of each deploy; NO downtime log —
+// the history stays gated at /build/health). /healthz above remains the bare probe.
+app.get('/status', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(renderHealth(health.getCurrent(), null, null, { publicView: true }));
+});
+
 app.use(express.json({ limit: '256kb' }));
 
 // ── SMT HUB: lead-event ingest ────────────────────────────────────────────────
