@@ -1,0 +1,47 @@
+<p><strong>S-Move Operations — DPIA Screening Assessment</strong></p>
+<p>A short screening to decide whether a <em>full</em> Data Protection Impact Assessment is legally required for the SMO platform, and to record the outcome. Companion to the Data Protection / GDPR doc.</p>
+<p><em>Prepared 2026-07-29 on the interim safe basis. Controller: S-Move Removals Ltd (SMR), SC892140.</em></p>
+
+<h1>1. What this is</h1>
+<p>Under UK GDPR a full DPIA is <strong>mandatory</strong> only where processing is likely to result in a <strong>high risk</strong> to individuals. This screening tests SMO's processing against the ICO's high-risk criteria to decide whether a full DPIA is needed. It is deliberately proportionate to SMR's small scale.</p>
+
+<h1>2. Processing under assessment</h1>
+<ul>
+<li>Customer identity, addresses, move details and communications.</li>
+<li>Staff HR data including <strong>bank details</strong> and payroll.</li>
+<li>Financial/banking data (Monzo transaction import into the ledger).</li>
+<li>AI processing of enquiries, receipts and quote context (Anthropic Claude).</li>
+<li>Voice-call and SMS intake (Twilio); room photos uploaded for quoting.</li>
+<li>Passkey (biometric-backed) authentication.</li>
+</ul>
+
+<h1>3. Screening against the ICO high-risk criteria</h1>
+<table>
+<thead><tr><th>Criterion</th><th>Applies?</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Evaluation or scoring / profiling</td><td>No</td><td>No profiling of individuals. AI structures enquiry data; it does not score or profile people.</td></tr>
+<tr><td>Automated decision-making with legal / significant effect</td><td>No</td><td>Quote pricing is decided by a human admin (the AI only <em>suggests</em>); no automated decision produces a legal/significant effect on anyone.</td></tr>
+<tr><td>Systematic monitoring of a publicly accessible area</td><td>No</td><td>No CCTV or public-space monitoring.</td></tr>
+<tr><td>Special-category or criminal-offence data</td><td>No</td><td>No health, biometric-as-identifier at scale, or criminal data is deliberately processed. Passkeys store a public-key credential, not a biometric template (biometrics stay on the user's device).</td></tr>
+<tr><td>Data processed on a large scale</td><td>No</td><td>Small removals business; low volume of data subjects. Not "large scale" in the ICO sense.</td></tr>
+<tr><td>Matching or combining datasets</td><td>No</td><td>Data is combined only within the single customer/job record for the service itself.</td></tr>
+<tr><td>Data about vulnerable data subjects</td><td>No (not targeted)</td><td>General adult customers and employees; no targeting of children or vulnerable groups.</td></tr>
+<tr><td>Innovative use of technology</td><td>Partly</td><td>AI (Claude) for enquiry handling and voice intake is innovative. Risk is limited: no special-category data, human stays in the loop, inputs aren't used to train the model.</td></tr>
+<tr><td>Prevents data subjects exercising a right or using a service</td><td>No</td><td>Processing enables the service; it does not block access or rights.</td></tr>
+<tr><td>Biometric / genetic data</td><td>No</td><td>No genetic data. Passkey biometrics never leave the user's device.</td></tr>
+<tr><td>Tracking location or behaviour</td><td>No</td><td>Addresses are collected to perform the move, not to track people.</td></tr>
+</tbody>
+</table>
+
+<h1>4. Outcome</h1>
+<p><strong>A full DPIA is not mandatory.</strong> The processing meets at most one of the ICO's high-risk indicators (innovative technology), and that risk is low and mitigated. Two indicators normally point toward a mandatory DPIA; SMO does not reach that threshold.</p>
+<p>Residual risk is <strong>low-to-moderate</strong>, driven mainly by holding staff bank details and financial data. These are mitigated by the controls in the Data Protection doc §6: server-side-only database access, hashed passwords, restricted bank-details access, device-gated admin login, HTTPS-only, and hourly backups.</p>
+
+<h1>5. Re-screen if any of these change</h1>
+<ul>
+<li>Volume grows to a materially larger scale.</li>
+<li>Special-category data starts being processed (e.g. health information about a customer's needs).</li>
+<li>Automated pricing or any automated decision with a significant effect goes live.</li>
+<li>A new AI capability begins profiling or scoring individuals.</li>
+</ul>
+<p><em>Reviewed by: alex@s-move.co.uk (data contact). To be re-confirmed alongside the wider GDPR sign-off once grant funding lands.</em></p>
