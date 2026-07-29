@@ -7,11 +7,12 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const auth = require('./lib/build-auth');
-const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup, renderBrandLibrary } = require('./lib/build-render');
+const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup, renderBrandLibrary, renderHealth } = require('./lib/build-render');
 const buildStatus = require('./data/build-status');
 const copilot = require('./lib/copilot');
 const brandAssets = require('./lib/brand-assets');
 const { zipStore } = require('./lib/zip');
+const health = require('./lib/health');
 
 // Flatten every project's docs into a lookup for the gated /build/doc/:id route.
 const DOC_DIR = path.join(__dirname, 'docs-store');
@@ -303,6 +304,14 @@ app.get('/build/brand/file', requireDeviceAndSession, async (req, res) => {
   }
 });
 
+// ── Deploy health dashboard (gated) ────────────────────────────────────────────
+app.get('/build/health', requireDeviceAndSession, async (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  const services = health.getCurrent();
+  const incidents = health.loggingEnabled() ? await health.getIncidents(60) : null;
+  res.send(renderHealth(services, incidents, req.buildUser));
+});
+
 // ── Team: "Set up Claude Code" page + org CLAUDE.md download ───────────────────
 // Behind the same device+login gate as the rest of /build — anyone who needs this
 // file already has build access, so there's no reason to expose it separately.
@@ -398,4 +407,6 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`S-Move Technologies site + hub listening on port ${PORT}`);
+  // Start the deploy-health monitor (pings each product every few minutes).
+  health.init().catch(e => console.error('[health] init failed:', e.message));
 });
