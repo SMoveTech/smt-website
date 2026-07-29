@@ -106,7 +106,7 @@ module.exports = {
         { id: 'smo-ops-runbook', title: 'Operations & Incident Runbook', type: 'html', file: 'smo-ops-runbook.html', note: 'Deploy/rollback, known failure modes + fixes, backups, alerts', review: { status: 'current', reviewedOn: '2026-07-28' } },
         { id: 'smo-env-config', title: 'Environment & Config Reference', type: 'html', file: 'smo-env-config.html', note: 'Every env var/secret and external endpoint', review: { status: 'current', reviewedOn: '2026-07-28' } },
         { id: 'smo-data-dictionary', title: 'Data Dictionary', type: 'html', file: 'smo-data-dictionary.html', note: 'All 35 tables — fields, relationships, purpose', review: { status: 'current', reviewedOn: '2026-07-28' } },
-        { id: 'smo-data-protection', title: 'Data Protection / GDPR', type: 'html', file: 'smo-data-protection.html', note: 'Data inventory, rights, retention, processors', review: { status: 'draft', note: '15 [CONFIRM] items to resolve' } },
+        { id: 'smo-data-protection', title: 'Data Protection / GDPR', type: 'html', file: 'smo-data-protection.html', note: 'Data inventory, rights, retention, processors — interim safe basis (longest retention assumed)', review: { status: 'review', reviewedOn: '2026-07-29', note: 'Safe interim basis adopted; 5 items in §9 need official sign-off post-funding (ICO reg, Supabase region, DPAs, DPIA, publish privacy notice)' } },
         { id: 'smo-dev-setup', title: 'Developer Onboarding / Local Setup', type: 'html', file: 'smo-dev-setup.html', note: 'Clone, env, run, build, deploy', review: { status: 'current', reviewedOn: '2026-07-28' } },
       ],
       docCoverage: {
@@ -121,7 +121,7 @@ module.exports = {
         ops:          { status: 'have', docId: 'smo-ops-runbook' },
         backup:       { status: 'have', docId: 'smo-ops-runbook', note: 'Ops runbook §6' },
         security:     { status: 'partial', note: 'architecture §8 + data-protection §6; no standalone access matrix' },
-        gdpr:         { status: 'have', docId: 'smo-data-protection', note: 'draft — needs review' },
+        gdpr:         { status: 'have', docId: 'smo-data-protection', note: 'interim safe basis; 5 items pending official sign-off post-funding' },
         testing:      { status: 'have', note: 'TEST_PLAN.md in repo' },
         userguides:   { status: 'have', docId: 'smo-admin-guide', note: 'Admin / Customer / Staff guides' },
         devsetup:     { status: 'have', docId: 'smo-dev-setup' },
