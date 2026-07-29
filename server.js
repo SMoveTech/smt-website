@@ -7,8 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const auth = require('./lib/build-auth');
-const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage } = require('./lib/build-render');
+const { renderDashboard, renderLogin, renderNotApproved, renderEnrolled, renderDevices, renderChangePassword, renderDocPage, renderTeamSetup } = require('./lib/build-render');
 const buildStatus = require('./data/build-status');
+const copilot = require('./lib/copilot');
 
 // Flatten every project's docs into a lookup for the gated /build/doc/:id route.
 const DOC_DIR = path.join(__dirname, 'docs-store');
@@ -255,6 +256,39 @@ app.post('/build/users/reset', requireDeviceAndSession, async (req, res) => {
   const result = await auth.adminResetPassword(target, req.buildUser);
   if (!result.ok) return res.status(400).json(result);
   res.json({ ok: true, tempPassword: result.tempPassword });
+});
+
+// ── Build co-pilot: staff ask questions about the projects / how we build ──────
+// Gated by the same device+login as /build. Grounded in the live build record +
+// team guide. Needs ANTHROPIC_API_KEY in the environment.
+app.post('/build/copilot', requireDeviceAndSession, async (req, res) => {
+  const question = String((req.body && req.body.question) || '').trim();
+  if (!question) return res.status(400).json({ error: 'Ask a question first.' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'Co-pilot is not configured yet (set ANTHROPIC_API_KEY).' });
+  try {
+    const answer = await copilot.ask(question, (req.body && req.body.history) || []);
+    res.json({ answer });
+  } catch (e) {
+    console.error('[copilot] error:', e.message);
+    res.status(500).json({ error: 'Co-pilot hit an error — try again in a moment.' });
+  }
+});
+
+// ── Team: "Set up Claude Code" page + org CLAUDE.md download ───────────────────
+// Behind the same device+login gate as the rest of /build — anyone who needs this
+// file already has build access, so there's no reason to expose it separately.
+app.get('/build/claude-setup', requireDeviceAndSession, (req, res) => {
+  html(res); res.setHeader('Cache-Control', 'no-store');
+  res.send(renderTeamSetup({ downloadUrl: '/build/claude-md', user: req.buildUser }));
+});
+
+app.get('/build/claude-md', requireDeviceAndSession, (req, res) => {
+  const file = path.join(__dirname, 'SMT-CLAUDE.md');
+  if (!fs.existsSync(file)) return res.status(404).send('Guide not found.');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="SMT-CLAUDE.md"');
+  res.sendFile(file);
 });
 
 // Static assets (1 hour cache; HTML revalidates)
