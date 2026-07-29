@@ -1,7 +1,6 @@
-<p><strong>Council &amp; Stakeholder Contact Tracker — Task Brief</strong></p>
+<p><strong>Task Brief — Council &amp; Stakeholder Contact Tracker</strong></p>
 <p><strong>For:</strong> Dave Sisson &nbsp;·&nbsp; <strong>From:</strong> Alex</p>
-<p><strong>Purpose:</strong> Dave's first real Claude Code build — a genuinely useful internal tool for S-Move Dealer (SMD), not a throwaway exercise. A hands-on way to learn to work <em>with</em> Claude.</p>
-<p><em>The people to load into the tool come from the SMD project's Go-to-market panel on this dashboard; the brief points Dave there rather than pasting contacts in.</em></p>
+<p><strong>Purpose:</strong> Your first real Claude Code build. A genuinely useful internal tool for S-Move Dealer (SMD) — not a throwaway exercise. Take your time and use it to learn how to work <em>with</em> Claude.</p>
 
 <h1>Why this exists</h1>
 <p>For SMD we need to approach a lot of key people — economic development officers, BID/town-centre managers, portfolio councillors, business-gateway contacts — across several councils. Right now there's no shared, single place that tells us both:</p>
@@ -11,7 +10,7 @@
 <li><strong>What's happened so far</strong> — when we contacted them, how, and what came back</li>
 <li><strong>What's next</strong> — whose turn it is and when to follow up</li>
 </ul>
-<p>Without that, we duplicate effort, miss follow-ups, and can't catch each other up quickly. This app is the single source of truth for outreach so either of us can open it and instantly see where everything stands.</p>
+<p>Without that, you and I duplicate effort, miss follow-ups, and can't catch each other up quickly. This app fixes that. It's the "single source of truth" for outreach so either of us can open it and instantly see where everything stands.</p>
 
 <h1>The two halves of this task</h1>
 <p>There are deliberately <strong>two</strong> things to do here. The second is as important as the first.</p>
@@ -21,78 +20,93 @@
 <ol>
 <li><strong>Keep a list of people to contact</strong> — name, organisation, role, which council/area, why they matter, and a priority.</li>
 <li><strong>Store their contact details</strong> — email, phone, address, website/LinkedIn, and which is the best route in.</li>
-<li><strong>Log every contact attempt</strong> — one entry per interaction: date, method (email / phone / in-person / letter), who did it, a short summary, and the <strong>outcome</strong>.</li>
-<li><strong>Log emails properly</strong> — where contact was by email, keep a record of what was sent and what came back (subject, date, direction sent/received, and the message), so either of us can read the thread without digging through inboxes.</li>
-<li><strong>Track status &amp; next steps</strong> — each person moves through a simple pipeline (<em>Not contacted → Contacted → Responded → Meeting → Won / Dead</em>), with a "next action" and a due date so nothing goes cold.</li>
-<li><strong>Stay coordinated</strong> — both point at the same shared database, so whatever one logs, the other sees.</li>
+<li><strong>Log every contact attempt</strong> — one entry per interaction: date, method (email / phone / in-person / letter), who did it (you or me), a short summary, and the <strong>outcome</strong>.</li>
+<li><strong>Log emails properly</strong> — where contact was by email, keep a record of what was sent and what came back (subject, date, direction sent/received, and the message). Enough that either of us can read the thread without digging through our inboxes.</li>
+<li><strong>Track status &amp; next steps</strong> — each person moves through a simple pipeline (e.g. <em>Not contacted → Contacted → Responded → Meeting → Won / Dead</em>), with a "next action" and a due date so nothing goes cold.</li>
+<li><strong>Stay coordinated</strong> — because we both point at the same shared database, whatever you log I see, and vice-versa.</li>
 </ol>
-<p>Keep it an <strong>MVP first</strong>. Get the above working end-to-end before adding anything clever.</p>
+<p>Keep it an <strong>MVP first</strong>. Get the above working end-to-end before adding anything clever. Resist the urge to gold-plate.</p>
 
-<h2>Half 2 — Get the people into it (the real learning bit)</h2>
-<p><strong>The contacts are deliberately not pasted into the brief.</strong> Pulling them together is part of the exercise.</p>
+<h2>Half 2 — Get the people into it (this is the real learning bit)</h2>
+<p><strong>I'm deliberately not pasting the contacts into this brief.</strong> Pulling them together is part of the exercise.</p>
 <ul>
-<li>The source is this <strong>Build system</strong> — open the <strong>S-Move Dealer</strong> project and read the <strong>Go-to-market</strong> panel: the councils, what we ask them for, how we frame it, the named officers / BIDs / councillors, and the local champions. Use the <strong>co-pilot</strong> to find your way around and understand who matters and why.</li>
-<li>Then <strong>verify before loading anyone in.</strong> Council and BID roles change, so use Claude's web search to confirm each person is still in post and their detail is current — the panel itself says to confirm roles before addressing anyone by name.</li>
-<li><strong>Rules:</strong>
+<li>The source is the <strong>SMT Build system</strong> (<code>smt.s-move.co.uk/build</code>, log in with your account). Open the <strong>S-Move Dealer</strong> project and read the <strong>Go-to-market</strong> panel — that's where our council/outreach thinking lives: which councils we're targeting, what we're asking them for, how we frame it, the named officers / BIDs / councillors, and the local champions. Use the <strong>co-pilot</strong> (the "Ask co-pilot" chat on <code>/build</code>) to help you find your way around and understand <em>who</em> matters and <em>why</em>.</li>
+<li>Then <strong>verify before you load anyone in.</strong> Council and BID roles change, so use <strong>Claude's web search</strong> in your coding session to confirm each person is still in post and their contact detail is current — the panel itself tells you to confirm roles before addressing anyone by name. This is good practice at directing Claude to research and cross-check.</li>
+<li><strong>Rules (don't skip):</strong>
 <ul>
 <li>Only use <strong>publicly available</strong> sources (council / BID / business-gateway pages).</li>
-<li><strong>Never invent a name or an email.</strong> If no individual is listed, use the official team inbox and note that no individual was found.</li>
+<li><strong>Never invent a name or an email.</strong> If no individual is listed, use the official <strong>team inbox</strong> and note that no individual was found.</li>
 <li>Where a role can't be confirmed, <strong>flag it in the app</strong> as "confirm before contacting" rather than guessing.</li>
-<li>Record where each detail came from (source URL).</li>
+<li>Record where each detail came from (source URL) so we can trust it later.</li>
 </ul>
 </li>
 <li>Load the verified people in as the starting dataset.</li>
 </ul>
+<p>By the end you should have both a working tool <em>and</em> it populated with real, checked contacts.</p>
 
-<h1>Ground rules for the build (house style)</h1>
+<h1>Ground rules for the build (house style — please match exactly)</h1>
+<p>These keep it easy for me to review and take live later:</p>
 <ul>
-<li><strong>Stack:</strong> Node.js + Express backend (a single <code>server.js</code> to start). Plain HTML + CSS + vanilla JS on the front end, served by the Node server. <strong>No React / Next / build tooling</strong> unless checked first. Keep it boring and standard.</li>
-<li><strong>Database:</strong> Supabase (Postgres) on <strong>Dave's own free Supabase account</strong>. Claude walks him through signup + creating a project. It's a throwaway project — <strong>not</strong> connected to any live S-Move / customer database. Alex ports the tables into the live project on handover.</li>
-<li><strong>Name every table with an <code>outreach_</code> prefix</strong> (<code>outreach_contacts</code>, <code>outreach_interactions</code>, <code>outreach_emails</code>, <code>outreach_next_steps</code>) so they stay tidy and collision-free alongside our other tables.</li>
-<li><strong>Read all Supabase details from env vars</strong> (<code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>) — never hard-coded — so the app can be re-pointed at the live project on handover with no code change.</li>
-<li><strong>Security model:</strong> the browser never talks to Supabase directly and never sees a key. The browser calls the Node server; the server uses the service-role key (in <code>.env</code>, git-ignored). <strong>RLS on for every table.</strong></li>
-<li><strong>Every table gets</strong> <code>id</code> (uuid), <code>created_at</code>, <code>updated_at</code>, and a nullable <code>deleted_at</code>. <strong>Soft-delete only — never hard-delete.</strong></li>
-<li><strong>Never commit secrets.</strong> Keys live in <code>.env</code>; provide a <code>.env.example</code> with placeholders.</li>
-<li><strong>No git remotes or Railway deployment</strong> — build and run locally; Alex handles go-live.</li>
-<li>A ready-made conventions file, <code>council-crm-CLAUDE.md</code>, captures all of this — copied into the project as <code>CLAUDE.md</code> so Claude follows it automatically.</li>
+<li><strong>Stack:</strong> Node.js + Express backend, a single <code>server.js</code> to start. Plain HTML + CSS + vanilla JS on the front end, served by the Node server. <strong>No React / Next / build tooling</strong> unless you check with me first. Keep it boring and standard.</li>
+<li><strong>Database:</strong> Supabase (Postgres) — on <strong>your own free Supabase account</strong>. Claude will walk you through signing up (it's free) and creating a project; it can't click the website for you, but it'll talk you through each step. This is <em>your</em> throwaway project — do NOT connect to any existing S-Move / customer database. There's no real data to protect in yours, so experiment freely. When it's ready I'll port the tables into our live project.</li>
+<li><strong>Name every table with an <code>outreach_</code> prefix</strong> (<code>outreach_contacts</code>, <code>outreach_interactions</code>, <code>outreach_emails</code>, <code>outreach_next_steps</code>) — they'll eventually sit alongside our other tables, so the prefix keeps them tidy and collision-free.</li>
+<li><strong>Read all Supabase details from env vars</strong> (<code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>) — never hard-code them — so I can re-point the app at our live project on handover without touching the code.</li>
+<li><strong>Security model:</strong> the browser <strong>never</strong> talks to Supabase directly and never sees a Supabase key. The browser calls your Node server; the server talks to Supabase using the <strong>service-role key</strong>, kept in a <code>.env</code> file that is git-ignored. Turn <strong>Row Level Security ON for every table</strong> (defence in depth) and include those statements in the schema.</li>
+<li><strong>Every table gets:</strong> <code>id</code> (uuid, default <code>gen_random_uuid()</code>), <code>created_at</code>, <code>updated_at</code> (timestamptz, default <code>now()</code>), and a nullable <code>deleted_at</code>. <strong>Soft-delete only — never hard-delete a row.</strong> "Deleting" sets <code>deleted_at</code>; queries filter out rows where it's set.</li>
+<li><strong>Never commit secrets.</strong> All keys live in <code>.env</code> (in <code>.gitignore</code>). Provide a <code>.env.example</code> with placeholders.</li>
+<li><strong>Don't set up git remotes or Railway deployment.</strong> Build and run locally only — I'll handle go-live separately.</li>
+<li>There's a ready-made conventions file, <code>council-crm-CLAUDE.md</code>, that captures all of the above. Copy it into your project as <code>CLAUDE.md</code> and Claude will follow it automatically.</li>
 </ul>
 
-<h1>How the database works</h1>
-<p>Claude writes the SQL, but it can't click around the Supabase website — creating the project and running the SQL are browser steps. The flow:</p>
+<h1>How the database works (read this — it answers the obvious question)</h1>
+<p>Claude can write all the SQL, but <strong>it can't click around the Supabase website for you</strong> — creating the project and running the table SQL are things a person does in the browser. Claude will talk you through it. The flow:</p>
 <ol>
-<li>Claude walks Dave through creating his own free Supabase project and copying its URL + service-role key into <code>.env</code>.</li>
-<li>Claude writes the whole data model into one commented <code>schema.sql</code> (tables + RLS); Dave pastes it into <strong>Supabase → SQL Editor → Run</strong>.</li>
-<li>Build and test against his own project until it works.</li>
-<li>On handover, Alex runs the same <code>schema.sql</code> in the live project and re-points the app via env vars — no code change. The trick: agree table names + variable names up front, and it slots straight in.</li>
+<li><strong>Claude walks you through creating your own free Supabase project</strong> and copying its URL + service-role key into your <code>.env</code>.</li>
+<li><strong>Claude writes the schema; you run it.</strong> It puts the whole data model in one well-commented <code>schema.sql</code> (tables + RLS), and you paste that into <strong>Supabase → SQL Editor → Run</strong>. Doing this yourself once is worth it — it's the bit most people are unsure about.</li>
+<li><strong>Build and test against your own project</strong> until it all works.</li>
+<li><strong>Hand it over and I port it across.</strong> I run the same <code>schema.sql</code> in our live project and re-point the app at it. Because your code reads its Supabase details from env vars (never hard-coded), nothing in the code changes. That's the whole trick: agree the table names + variable names up front, and it slots straight in.</li>
 </ol>
-<p>The README carries a short "Database setup" section with the click-by-click so anyone can repeat it in two minutes.</p>
+<p>Put a short <strong>"Database setup" section in the README</strong> with the click-by-click (create project → copy URL + service-role key into <code>.env</code> → SQL Editor → paste <code>schema.sql</code> → Run), so anyone can repeat it in two minutes. If you change the schema later, update <code>schema.sql</code> and tell me what changed.</p>
 
-<h1>How to work with Claude</h1>
+<h1>How to actually work with Claude (tips for getting the most out of it)</h1>
 <div style="border-left:4px solid #5b8def;background:rgba(91,141,239,.08);border:1px solid #2b3a55;border-left-width:4px;border-radius:8px;padding:12px 16px;margin:14px 0;">
-<strong>★ Biggest tip — show Claude your screen.</strong> Press <strong>Win + Shift + S</strong> to grab a screenshot of whatever you're asking about, then paste it into Claude's chat bar with <strong>Ctrl + V</strong>. Claude can <em>see</em> the image, which saves a huge amount of explaining — and it works both ways: Claude can look at what's on your screen and guide you through it, step by step. Setting up Supabase is the perfect example — keep snapping your screen and Claude walks you through every stage.
+<strong>★ Biggest tip — show Claude your screen.</strong> Press <strong>Win + Shift + S</strong> to grab a screenshot of whatever you're asking about, then paste it into Claude's chat bar with <strong>Ctrl + V</strong>. Claude can <em>see</em> the image, which saves a huge amount of explaining. It works both ways too: Claude can look at what's on your screen and guide you through it, step by step. Setting up Supabase is the perfect example — keep snapping your screen and showing Claude, and it'll walk you through every stage. Alex uses this constantly — he even used it to show Claude exactly where to slot this tip into the document.
 </div>
 <ul>
-<li>Open a terminal in the project folder and run <code>claude</code>; point it at this brief and <code>CLAUDE.md</code>.</li>
-<li><strong>Ask for a plan before any code</strong>, review it, then let it build.</li>
-<li>Build in small steps and test each one: contact list → interaction log → email log → status/next-steps.</li>
-<li>When something breaks, paste the actual error back to Claude rather than hand-fixing.</li>
-<li>Never paste real secrets (service-role keys, passwords) into the chat — keep them in <code>.env</code>.</li>
-<li>Ask Claude to explain anything you don't understand — that's the point of the exercise.</li>
+<li><strong>Open a terminal in your empty project folder and run <code>claude</code>.</strong> Point it at this brief and the <code>CLAUDE.md</code> conventions file as your starting context.</li>
+<li><strong>Ask for a plan before any code.</strong> Something like <em>"Read the brief and CLAUDE.md, then propose a plan and the data model — don't write code yet."</em> Review the plan, push back, then let it build.</li>
+<li><strong>Build in small steps and test each one</strong> before moving on. Get the contact list working, then the interaction log, then the email log, then the status/next-step bits.</li>
+<li><strong>When something breaks, paste the actual error back to Claude</strong> — it's very good at fixing from the real message. Don't try to hand-fix.</li>
+<li><strong>Use it for the research too:</strong> <em>"Search the web for the current economic development officer at [council] and their public contact email, with the source URL."</em> Then have it help you load what you find into the app.</li>
+<li><strong>Don't paste real secrets into the chat</strong> (service-role keys, passwords). Keep them in <code>.env</code>.</li>
+<li><strong>Ask Claude to explain anything you don't understand.</strong> That's the whole point of this exercise — you learning the workflow, not just getting an app.</li>
 </ul>
 
 <h1>What to hand back</h1>
 <ol>
 <li>The project folder (source code).</li>
-<li><code>schema.sql</code> — the full, RLS-enabled schema.</li>
-<li><code>README.md</code> — how to run locally, the Database-setup steps, and the API endpoints.</li>
-<li><code>.env.example</code> — every environment variable, with placeholder values.</li>
-<li>The app populated with the real, verified contacts, sources noted.</li>
+<li><code>schema.sql</code> — the full, RLS-enabled database schema.</li>
+<li><code>README.md</code> — how to run it locally, the "Database setup" steps above, and a list of the API endpoints.</li>
+<li><code>.env.example</code> — every environment variable it needs, with placeholder values (no real secrets).</li>
+<li>The app <strong>populated</strong> with the real contacts you checked, sources noted.</li>
 </ol>
-<p><strong>Sending it over:</strong> zip the whole project folder but delete <code>node_modules/</code> and <code>.env</code> first (<code>node_modules</code> rebuilds with <code>npm install</code>; <code>.env</code> holds keys and must never leave the machine).</p>
+<p><strong>How to send it to me:</strong> zip up the whole project folder, but <strong>delete <code>node_modules/</code> and <code>.env</code> first</strong> — <code>node_modules</code> is huge and I can rebuild it with <code>npm install</code>, and <code>.env</code> holds your keys and must never leave your machine. Send me the zip and I'll take it from there.</p>
 
-<h1>Scope</h1>
-<p><strong>In:</strong> the Half-1 features, a simple shared login (single shared password against an env var), and the verified contacts loaded in.</p>
-<p><strong>Out for now:</strong> automatic Gmail email syncing, notifications/reminders, fancy dashboards, deployment — added once the core works.</p>
+<h1>Keep it in scope</h1>
+<p><strong>In:</strong> the features in Half 1, a simple shared login (a single shared password checked against an env var is fine — don't build a full user-account system), and the researched contacts loaded in.</p>
+<p><strong>Out (for now):</strong> automatic email syncing from Gmail, notifications/reminders, fancy dashboards, deployment. We can add those once the core works. If you're tempted to add something, note it and ask me first.</p>
+<p>There's no deadline — the goal is that you come out the other side comfortable driving Claude on a real build. Ask me anything as you go.</p>
 
-<h1>Keeping this project current</h1>
-<p>This "Dave S" project follows the same living-doc format as the others. Dave keeps a <code>PROJECT-STATUS.md</code> in his repo in the same shape (stage %, milestone log newest-first, next steps); when he sends an update or the final zip, Alex syncs it into this dashboard so it always reflects reality.</p>
+<h1>Keeping your project on the dashboard</h1>
+<p>Your project now has its own <strong>"Dave S"</strong> tab in the <code>/build</code> dashboard, alongside SMO/SMD/etc. It follows the same format as the others (stage %, summary, architecture, a dated milestone log, and next steps). Keep a <strong><code>PROJECT-STATUS.md</code></strong> in your repo in that same shape — get Claude to update it whenever you finish a meaningful step (add a dated line to the top of the milestone log, adjust the stage % and "where we are" line). When you send me an update or the final zip, I'll sync it into <code>/build</code> so it always reflects where you're really at. That's the same living-doc habit every S-Move project follows.</p>
+
+<h1>Ready to start? Paste this into Claude first</h1>
+<p>Open a terminal <strong>in your (empty) project folder</strong>, run <code>claude</code>, and paste the block below as your very first message. It primes Claude with how I'd like it to work with you.</p>
+<div style="background:#0f1522;border:1px solid #2b3a55;border-radius:8px;padding:14px 16px;margin:12px 0;font-family:Consolas,'Courier New',monospace;font-size:.9em;line-height:1.6;color:#cdd6ea;">
+<p>I'm Dave. This is one of my first Claude Code projects, so please act as a patient pair-programmer and teacher — explain what you're doing and why as we go, in plain language, and don't assume I know the jargon. Stop and check with me at each step rather than racing ahead.</p>
+<p>In this folder are two files: CLAUDE.md (the build conventions — follow them exactly) and Dave S - Task Brief - Council Contact Tracker.md (the task brief). Read both fully before doing anything else.</p>
+<p>Then, before writing any code, propose a short plan and the data model and wait for me to okay it. Work in small steps and let me test each one before moving on.</p>
+<p>Key things to hold onto as we build: it's a small Node + Express + vanilla-JS contact tracker backed by Supabase; I'll use my own free Supabase account, so walk me through creating it when we get there. Name every table with an outreach_ prefix, read all Supabase keys from environment variables (never hard-code them), turn RLS on for every table, and use soft-deletes only (a deleted_at column, never a real delete). Don't set up git remotes or deploy anything — Alex handles go-live. Never print my secret keys into the chat.</p>
+<p>The people to load come from our internal /build system (I'll bring the details in) — when we add a contact, help me confirm their current role with a web search before we trust it. Also keep a PROJECT-STATUS.md updated as we go.</p>
+<p>Start by reading the two files, then tell me your plan.</p>
+</div>
