@@ -87,12 +87,16 @@ brand of whoever it's from:
 
 If you're unsure which brand a piece belongs to, ask before publishing.
 
-**Design systems.** Before building any customer-facing UI for an app, read that app's
-design system and follow it (colour roles, type, buttons, icons, artwork rules). If you
-installed the setup bundle, they're on your machine at `design-systems/` in your Claude
-folder (Windows: `C:\Users\<you>\.claude\design-systems\`). **SMD** has one
-(`design-systems/smd.md`; live visual version at `shop.s-move.co.uk/design-system`). The
-other apps don't have one yet — if you're building UI for one, ask Alex for the rules first.
+**Design systems.** Before building any UI for an app, read that app's design system and
+follow it (colour roles, type, buttons, icons, rules). If you installed the setup bundle,
+they're on your machine at `design-systems/` in your Claude folder (Windows:
+`C:\Users\<you>\.claude\design-systems\`):
+- `smd.md` — **SMD** (fully defined; live visual version at `shop.s-move.co.uk/design-system`).
+- `smo.md` — **SMO** (starting frame from the current app look; SMR rides this red/black look).
+- `smt.md` — **SMT** (starting frame from the current site; blue placeholder palette).
+
+`smo`/`smt` are starting frames captured from how the apps look now — follow them, and flag
+anything that should change rather than drifting. SMC has no frame yet (rides SMD's look).
 
 **Logos & graphics:** if you installed via the setup bundle, the brand logos are already
 on your machine in your Claude folder at `smt-brand-assets/` (Windows:
