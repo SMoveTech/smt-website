@@ -1,0 +1,121 @@
+<p><strong>S-Move Operations — Admin Console User Guide</strong></p>
+<p>The complete guide to running the removals business from one screen: customers, quotes, staff, requests, payments and full financials.</p>
+<p><em>Rebuilt 2026-07-29 for S-Move Removals Ltd's live instance (replaces the old "RemovalDesk" white-label guide). Reflects the console as it works today.</em></p>
+
+<h1>1. Logging in &amp; access</h1>
+<ul>
+<li>The Admin Console lives at <code>app.s-move.co.uk/admin</code>. Sign in with your own named account (email + password) — there is no shared login.</li>
+<li>Admin access is <strong>device-gated as a second factor</strong>: a machine has to be approved before it will even show the login form. On an unapproved device you'll see a "this machine isn't approved" page (HTTP 403) rather than the password box — that is expected, not a fault. A new device is approved via an invite/setup link from someone already in.</li>
+<li>If you think you've "forgotten your password" but you're actually being stopped before the password screen, that's the device gate — get your device approved rather than resetting the password.</li>
+<li>Keep your password somewhere safe. Financial and customer data is never hard-deleted, but losing the only admin login still means going through device re-approval to get back in.</li>
+</ul>
+
+<h1>2. Overview — the main tabs</h1>
+<p>The Admin Console is your central hub for running the entire business, used daily. The tabs run across the top:</p>
+<table>
+<thead><tr><th>Tab</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>Customers</td><td>Full customer list, job cards, quotes and bookings</td></tr>
+<tr><td>Diary</td><td>Visual calendar of all confirmed jobs</td></tr>
+<tr><td>Requests</td><td>Pending packing, service and date-change requests (badge shows the count)</td></tr>
+<tr><td>Staff Rota</td><td>Shift management, crew assignment, flexible jobs</td></tr>
+<tr><td>HR</td><td>Staff profiles, payroll, approvals</td></tr>
+<tr><td>Storage</td><td>Storage container tracking</td></tr>
+<tr><td>Archive</td><td>Completed and cancelled jobs</td></tr>
+<tr><td>Pricing</td><td>Set material prices shown to customers</td></tr>
+<tr><td>Reports</td><td>Business reporting</td></tr>
+<tr><td>Vehicles</td><td>Fleet tracking + alerts (MOT/service reminders)</td></tr>
+<tr><td>Bug Reports</td><td>Issues logged from the apps</td></tr>
+<tr><td>Accounts</td><td>Company (business) accounts and their jobs</td></tr>
+<tr><td>Financials</td><td>Income &amp; Expenditure, VAT, VAT Pot, Petty Cash</td></tr>
+<tr><td>Acct Comms</td><td>Messages with the accountant</td></tr>
+<tr><td>Mailing List</td><td>Marketing / launch mailing list + CSV export</td></tr>
+<tr><td>Analytics</td><td>Site visits and usage</td></tr>
+</tbody>
+</table>
+
+<h1>3. Customer list</h1>
+<p>The Customers tab shows all active jobs. Click any row to open the full job card.</p>
+<ul>
+<li><strong>Job Ref</strong> — unique job number (e.g. #0001)</li>
+<li><strong>Customer</strong> — name, email, phone, job type badge</li>
+<li><strong>Date</strong> — move date (click to jump to the Diary)</li>
+<li><strong>Quote</strong> — current status and amount</li>
+<li><strong>Booking</strong> — stage (Enquiry, Quoted, Confirmed, etc.)</li>
+<li><strong>Payment</strong> — Unpaid, Deposit paid, Paid in full</li>
+</ul>
+<p>The stats bar at the top updates live — Total Customers, Pending Quotes, Confirmed Moves, Payments Due. Use <strong>Search</strong> to find by name, email, phone or job ref, and the quote-status pills to filter. <strong>New Job</strong> (top right) creates a job manually.</p>
+
+<h1>4. Job cards</h1>
+<p>Click any customer to open their job card. Key sub-tabs inside:</p>
+<ul>
+<li><strong>Quote Breakdown</strong> — enter costs, send quotes, issue revisions. A £50 minimum warning prevents accidental zero quotes. You can enter a quote inclusive of VAT and it will break the net/VAT out for you.</li>
+<li><strong>Payments</strong> — confirm bank transfers, approve payment-link requests.</li>
+<li><strong>Date changes</strong> — approve or decline customer date-change requests.</li>
+<li><strong>Service requests</strong> — packing materials and services with auto-calculated costs.</li>
+<li><strong>Messages</strong> — full chat thread; reply to the customer directly from here.</li>
+<li><strong>Photos</strong> — room/item photos the customer uploaded for the quote.</li>
+<li><strong>Communications</strong> — the log of emails and SMS sent for this job, with sent dates.</li>
+<li><strong>Rota Info</strong> — set crew size and confirm the job for the rota.</li>
+</ul>
+
+<h1>5. Sending quotes, invoices &amp; emails</h1>
+<p>Customer emails are <strong>never auto-sent</strong> on a status change — you always send them deliberately from a Send panel, so nothing goes out by accident.</p>
+<ol>
+<li>Open the job card → <strong>Quote Breakdown</strong>.</li>
+<li>Enter the removal service cost (other fields optional). The total auto-calculates, or enter it manually.</li>
+<li>Save — the quote status sets to "Sent".</li>
+<li>To email the customer, open the <strong>Send</strong> panel: you get a <strong>PDF preview</strong> of the exact document first, then send. The paired customer SMS goes with it, and you get a Gmail "landed in Sent" confirmation so you know it actually left.</li>
+<li>Each document tracks its own sent date, so you can see at a glance what has and hasn't gone out.</li>
+</ol>
+<p>Invoices work the same way (preview → send). For company-account jobs the email opt-out is taken from the account, so a stale per-job opt-out won't silently block a send.</p>
+<p><strong>AI quote suggestion:</strong> when pricing a job the console can suggest a price and explain its reasoning, learning from past quotes. It's a suggestion — you stay in control of the final number.</p>
+
+<h1>6. Staff Rota</h1>
+<ol>
+<li>Open the job card → Rota Info → enter driver/porter count → Confirm.</li>
+<li>Go to the <strong>Staff Rota</strong> tab → click the job date.</li>
+<li>Drag the job into Team A, B or C.</li>
+<li>Use the dropdowns to assign specific staff members.</li>
+<li>Click <strong>Post Shifts</strong> — staff can now apply via their portal.</li>
+</ol>
+<p><strong>Flexible Jobs panel</strong> (right of the Rota): material delivery/collection tasks and no-fixed-date jobs. Assign them to a crew (A/B/C) on a chosen day. A badge on the tab flags shift-withdrawal requests waiting on you.</p>
+
+<h1>7. HR &amp; staff management</h1>
+<p><strong>Adding a staff member:</strong></p>
+<ol>
+<li>HR tab → <strong>+ Add Staff Member</strong>.</li>
+<li>Enter name, email, phone and role (Driver / Porter / Class 2).</li>
+<li>Save, then open their HR card to set a password.</li>
+<li>Click <strong>Send Portal Invite + User Guide</strong> to email them their login and the staff user guide automatically.</li>
+</ol>
+<p>Staff are grouped by role: Admin → Class 2 Driver → Driver → Porter → Casual Staff. The HR tab is also where payroll and staff-change approvals live. Payroll hours come from the recorded <strong>start time</strong> of the shift, not the job's arrival time.</p>
+
+<h1>8. Financials</h1>
+<p>The Financials tab is the money hub. It carries:</p>
+<ul>
+<li><strong>Income &amp; Expenditure (I&amp;E)</strong> — the ledger, with gross / net / VAT columns and job-ref linking. Card income can be batch-reconciled against Stripe.</li>
+<li><strong>VAT</strong> — VAT has been live since 1 Jul 2026 at the standard 20% rate; the ledger tracks it per line.</li>
+<li><strong>VAT Pot</strong> — shows net VAT due against the live Monzo VAT pot balance, plus a buffer, so you can see whether enough is set aside.</li>
+<li><strong>Petty Cash</strong> — log a staff out-of-pocket expense with its receipt. It posts to I&amp;E as expenditure immediately (category "Staff Reimbursement") so the accountant sees it, and it's reimbursed on the staff member's next payslip as a separate non-taxable line (wages + expenses = total paid). Admin-only.</li>
+</ul>
+<p>Bank activity auto-syncs from Monzo (friendly categories, notes kept, pot transfers filtered). Receipts uploaded against a transaction have their VAT read and applied automatically. Income can be matched to jobs by reference + name to set payment status. <strong>Financial data is never hard-deleted</strong> — corrections are made in place.</p>
+
+<h1>9. Pricing, Requests &amp; company Accounts</h1>
+<ul>
+<li><strong>Pricing</strong> — set unit prices for packing materials (small box, large box, tape, bubble wrap). These show to customers in real time when they request materials. Enter amounts → <strong>Save Prices</strong>.</li>
+<li><strong>Requests</strong> — everything awaiting your approval, with a count badge. <em>Packing material requests</em> auto-calculate the cost (adjust for a discount, then Approve → adds to the invoice and notifies the customer). <em>Date-change requests</em> — review the preferred/alternative dates → Approve or Decline. Check this every morning.</li>
+<li><strong>Accounts</strong> — company/business accounts. Their jobs can use standard company job types and the invoices carry the company logo and billing address.</li>
+</ul>
+
+<h1>10. Ask S-Move (in-console co-pilot)</h1>
+<p>"Ask S-Move" is a built-in AI helper that can explain how things work and point you to the right place in the console. Text size is adjustable per user from the display settings.</p>
+
+<h1>11. Daily-use tips</h1>
+<ul>
+<li>Check the <strong>Requests</strong> tab every morning — packing approvals update the customer invoice automatically.</li>
+<li>Dates on job cards are clickable — tap a move date to jump to that day in the Diary.</li>
+<li>When a quote is accepted, go to Rota Info immediately to plan the crew.</li>
+<li>Use the <strong>Archive</strong> tab for completed/cancelled jobs — they stay in the records but leave the main list.</li>
+<li>Always preview a document before sending it — the PDF preview shows the customer exactly what they'll get.</li>
+</ul>

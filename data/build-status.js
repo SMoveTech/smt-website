@@ -45,7 +45,7 @@ const docTemplate = [
 ];
 
 module.exports = {
-  updated: '2026-07-28',
+  updated: '2026-07-29',
   docTemplate,
 
   projects: [
@@ -100,9 +100,9 @@ module.exports = {
       docs: [
         { id: 'smo-tech-arch', title: 'Technical Architecture v2', type: 'html', file: 'smo-technical-architecture.html', note: 'Full system architecture — stack, 35-table DB, 258 APIs, 10 core workflows, AI, security', review: { status: 'review' } },
         { id: 'smo-overview', title: 'Plain-Language Overview', type: 'html', file: 'smo-plain-overview.html', note: 'Non-technical explainer of how the platform works', review: { status: 'review' } },
-        { id: 'smo-admin-guide', title: 'Admin Console — User Guide', type: 'pdf', file: 'smo-admin-guide.pdf', review: { status: 'outdated', note: 'Still branded "RemovalDesk" — needs regenerating' } },
-        { id: 'smo-customer-guide', title: 'Customer Portal — User Guide', type: 'pdf', file: 'smo-customer-guide.pdf', review: { status: 'outdated', note: 'Still branded "RemovalDesk" — needs regenerating' } },
-        { id: 'smo-staff-guide', title: 'Staff Portal — User Guide', type: 'pdf', file: 'smo-staff-guide.pdf', review: { status: 'outdated', note: 'Still branded "RemovalDesk" — needs regenerating' } },
+        { id: 'smo-admin-guide', title: 'Admin Console — User Guide', type: 'html', file: 'smo-admin-guide.html', note: 'Rebuilt S-Move branded; current 16-tab console incl. Financials/VAT/Petty Cash + button-only email', review: { status: 'current', reviewedOn: '2026-07-29' } },
+        { id: 'smo-customer-guide', title: 'Customer Portal — User Guide', type: 'html', file: 'smo-customer-guide.html', note: 'Rebuilt S-Move branded; quote assistant, accept/pay, requests, FAQ', review: { status: 'current', reviewedOn: '2026-07-29' } },
+        { id: 'smo-staff-guide', title: 'Staff Portal — User Guide', type: 'html', file: 'smo-staff-guide.html', note: 'Rebuilt S-Move branded; shifts, finish-time, flex tasks, biometric sign-in', review: { status: 'current', reviewedOn: '2026-07-29' } },
         { id: 'smo-ops-runbook', title: 'Operations & Incident Runbook', type: 'html', file: 'smo-ops-runbook.html', note: 'Deploy/rollback, known failure modes + fixes, backups, alerts', review: { status: 'current', reviewedOn: '2026-07-28' } },
         { id: 'smo-env-config', title: 'Environment & Config Reference', type: 'html', file: 'smo-env-config.html', note: 'Every env var/secret and external endpoint', review: { status: 'current', reviewedOn: '2026-07-28' } },
         { id: 'smo-data-dictionary', title: 'Data Dictionary', type: 'html', file: 'smo-data-dictionary.html', note: 'All 35 tables — fields, relationships, purpose', review: { status: 'current', reviewedOn: '2026-07-28' } },
