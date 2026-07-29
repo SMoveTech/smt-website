@@ -336,8 +336,11 @@ module.exports = {
         { label: 'Task brief', url: 'file:///E:/Claude/Dave%20S%20-%20Task%20Brief%20-%20Council%20Contact%20Tracker.md' },
         { label: 'Build conventions (CLAUDE.md)', url: 'file:///E:/Claude/council-crm-CLAUDE.md' },
       ],
+      docs: [
+        { id: 'daves-crm-brief', title: 'Task Brief — Contact Tracker', type: 'html', file: 'daves-crm-brief.html', note: 'The full build brief Dave works from — features, house rules, database flow, how to work with Claude', review: { status: 'current', reviewedOn: '2026-07-29' } },
+      ],
       docCoverage: {
-        overview:     { status: 'have', note: 'task brief + this dashboard' },
+        overview:     { status: 'have', docId: 'daves-crm-brief', note: 'task brief' },
         roadmap:      { status: 'have', note: 'this dashboard' },
         architecture: { status: 'partial', note: 'planned bullets here + CLAUDE.md conventions' },
         datamodel:    { status: 'partial', note: 'outreach_ tables agreed; schema.sql to be written' },
