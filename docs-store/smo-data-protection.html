@@ -64,7 +64,7 @@
 
 <h1>6. Security measures</h1>
 <ul>
-<li>Service-role DB access server-side only; anon keys never shipped. Row-Level Security in force where applicable (see the RLS audit).</li>
+<li>Service-role DB access server-side only; anon keys never shipped. Row-Level Security is enabled on every table (confirmed by dashboard audit) as defence-in-depth.</li>
 <li>Admin/accountant access behind password + device-approval gate (2FA-style); passkeys supported.</li>
 <li>Secrets in environment variables only; never committed. See Environment &amp; Config Reference.</li>
 <li>Backups hourly to a separate location; code in version control. See Operations &amp; Incident Runbook.</li>
