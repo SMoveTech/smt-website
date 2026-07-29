@@ -87,6 +87,13 @@ brand of whoever it's from:
 
 If you're unsure which brand a piece belongs to, ask before publishing.
 
+**Design systems.** Before building any customer-facing UI for an app, read that app's
+design system and follow it (colour roles, type, buttons, icons, artwork rules). If you
+installed the setup bundle, they're on your machine at `design-systems/` in your Claude
+folder (Windows: `C:\Users\<you>\.claude\design-systems\`). **SMD** has one
+(`design-systems/smd.md`; live visual version at `shop.s-move.co.uk/design-system`). The
+other apps don't have one yet — if you're building UI for one, ask Alex for the rules first.
+
 **Logos & graphics:** if you installed via the setup bundle, the brand logos are already
 on your machine in your Claude folder at `smt-brand-assets/` (Windows:
 `C:\Users\<you>\.claude\smt-brand-assets\`), organised `smr/ smd/ smt/` with a

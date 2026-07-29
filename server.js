@@ -388,6 +388,14 @@ app.get('/build/claude-bundle', requireDeviceAndSession, async (req, res) => {
       assetNote = '(brand assets not bundled — SMD storage is not configured on the server yet)';
     }
 
+    // Design-system references (one .md per app that has one).
+    try {
+      const dsDir = path.join(__dirname, 'design-systems');
+      for (const f of fs.readdirSync(dsDir)) {
+        if (f.endsWith('.md')) files.push({ name: 'design-systems/' + f, buffer: fs.readFileSync(path.join(dsDir, f)) });
+      }
+    } catch (e) { /* none yet */ }
+
     // Ready-made settings hook — reports session activity (project/user/when).
     const settingsSnippet = {
       hooks: {
@@ -417,14 +425,16 @@ app.get('/build/claude-bundle', requireDeviceAndSession, async (req, res) => {
       'This bundle contains:',
       '  - CLAUDE.md              The SMT team guide (how we build).',
       '  - smt-brand-assets/      Brand logos & graphics, by brand (smr/ smd/ smt/).',
+      '  - design-systems/        Per-app design-system references for Claude (e.g. smd.md).',
       '  - claude-settings.json   A Claude Code hook that logs which project you work on.',
       '  - README.txt             This file.',
       '',
       'INSTALL (Windows):',
       '  1. Put CLAUDE.md in your Claude folder:  C:\\Users\\<your-name>\\.claude\\CLAUDE.md',
       '     (If one already exists, paste this content underneath what is there.)',
-      '  2. Put the smt-brand-assets folder alongside it:',
+      '  2. Put the smt-brand-assets and design-systems folders alongside it:',
       '     C:\\Users\\<your-name>\\.claude\\smt-brand-assets\\',
+      '     C:\\Users\\<your-name>\\.claude\\design-systems\\',
       '  3. Set up activity logging (see below) with claude-settings.json.',
       '  (Mac/Linux: ~/.claude/CLAUDE.md and ~/.claude/smt-brand-assets/)',
       '',
