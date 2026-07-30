@@ -3,7 +3,7 @@
 <h1>1. What Is S-Move Dealer?</h1>
 <p>S-Move Dealer ("SMD", trading as "Your Highstreet Online") is a community-first directory and marketplace built to help independent shops on the local high street thrive by banding them together online. Its guiding idea is simple: <strong>"Shop local, discover more."</strong></p>
 <p>Unlike a conventional marketplace that ranks whoever pays the most, SMD is a <strong>directory first</strong> — every independent shop in an area is listed, whether or not they've claimed or paid for anything, so shoppers can always find their local high street online. Businesses can then "claim their listing" and personalise their shop.</p>
-<table><tr><td><p><strong>🛍️  Shoppers</strong></p><p><em>Browse the directory, buy items, support favourite shops</em></p></td><td><p><strong>🏪  Sellers</strong></p><p><em>List items, personalise their shop, get discovered</em></p></td><td><p><strong>🚶  Canvassers</strong></p><p><em>Visit shops in person to help them sign up</em></p></td><td><p><strong>🖥️  Admin</strong></p><p><em>Approve sellers, moderate, run the business</em></p></td></tr></table>
+<table><tr><td><p><strong>🛍️  Shoppers</strong></p><p><em>Browse the directory, enquire about items, support favourite shops</em></p></td><td><p><strong>🏪  Sellers</strong></p><p><em>List items, personalise their shop, get discovered</em></p></td><td><p><strong>🚶  Canvassers</strong></p><p><em>Visit shops in person to help them sign up</em></p></td><td><p><strong>🖥️  Admin</strong></p><p><em>Approve sellers, moderate, run the business</em></p></td></tr></table>
 <p>Each group has its own dedicated app (a Progressive Web App, installable on a phone like a native app), all connected to the same live data.</p>
 
 <h1>2. The Directory-First Approach</h1>
@@ -32,12 +32,13 @@
 <table><thead><tr><th><p><strong>Step</strong></p></th><th><p><strong>What Happens</strong></p></th></tr></thead><tbody>
 <tr><td><p>Browse</p></td><td><p>The shopper searches or filters by category and location; nearby and matching-category items are shown first, with similar items filling out the results</p></td></tr>
 <tr><td><p>Ask the AI assistant</p></td><td><p>A chat assistant can suggest items, add things to a wishlist, or pass on an enquiry to a seller</p></td></tr>
-<tr><td><p>Buy</p></td><td><p>Checkout is handled securely by Stripe; card details never touch S-Move's servers</p></td></tr>
+<tr><td><p>Enquire</p></td><td><p>The shopper sends an enquiry (general question, or to arrange collection/delivery) straight to the seller's portal — the shop's preferred contact details (phone, email, whatever they've set) are shown too, so the shopper can go straight to the seller if they'd rather</p></td></tr>
+<tr><td><p>Pay the seller directly</p></td><td><p>SMD does not take payment for items today — money for a purchase passes directly between shopper and seller, arranged after the enquiry. A phone-as-POS / stock-sync add-on that would let a seller take payment through SMD itself is planned but not yet live — it needs more revenue to finish building before it can go live</p></td></tr>
 <tr><td><p>Support a favourite shop</p></td><td><p>Shoppers can give a monthly "vote" and cosmetic "hearts" to shops they love, or make a donation — all of which feed into the shop's earned sidebar position</p></td></tr>
 </tbody></table>
 
 <h1>5. Sponsorship — Support, Not Pay-to-Win</h1>
-<p>Shops can optionally subscribe to a sponsored sidebar placement (a small monthly fee). This buys visibility in a dedicated sidebar slot and a "Pioneer" badge for early supporters — it never changes where a shop's products appear in search or category results. Admin can also grant a free ("comp") sponsor slot to a shop, and every shop that joins during the beta period gets a free month once SMD fully launches.</p>
+<p>Shops can optionally subscribe to a sponsored sidebar placement (a small monthly fee, paid via Stripe to S-Move Technologies — not to SMD directly, and unrelated to any item purchase). This buys visibility in a dedicated sidebar slot and a "Pioneer" badge for early supporters — it never changes where a shop's products appear in search or category results. Admin can also grant a free ("comp") sponsor slot to a shop, and every shop that joins during the beta period gets a free month once SMD fully launches.</p>
 
 <h1>6. Canvassing — Bringing Shops Online in Person</h1>
 <p>Because many independent shop owners are busy running their shop, SMD also has a field team that visits shops in person. A canvasser gets an AI-generated briefing before each visit (from a shopfront photo and a web search — likely owner name, how independent the shop is, existing online presence, and good talking points), records the outcome of the visit, and can photograph a shop's products ahead of time. If the shop signs up, that groundwork automatically carries over into their new live shop — nothing needs to be re-entered.</p>
@@ -47,7 +48,7 @@
 <tr><td><p>Seller applies</p></td><td><p>Brand colours are pulled from their logo/website; if they came from a canvasser visit, that groundwork is carried over on approval</p></td></tr>
 <tr><td><p>A listing gets no views for 7+ days</p></td><td><p>AI generates improvement tips for the seller</p></td></tr>
 <tr><td><p>A shop's sponsorship payment fails</p></td><td><p>The system retries and eventually drops the sponsored slot after a grace period, without any manual admin action</p></td></tr>
-<tr><td><p>A shopper starts checkout</p></td><td><p>The item is held for 15 minutes so it can't be sold twice</p></td></tr>
+<tr><td><p>A shopper sends an enquiry about an item</p></td><td><p>It's routed straight to the seller's portal, with the shop's preferred contact details shown alongside so the shopper can also reach out directly</p></td></tr>
 <tr><td><p>A canvass prospect never signs up</p></td><td><p>Any product photos captured for them are automatically deleted after 30 days</p></td></tr>
 </tbody></table>
 
@@ -59,7 +60,7 @@
 <tr><td><p>Code obfuscation</p></td><td><p>The server code is deliberately scrambled before it's deployed, making it far harder for anyone to read or copy.</p></td></tr>
 <tr><td><p>Device approval for admin</p></td><td><p>The admin panel can only be opened from a device that's been explicitly approved first.</p></td></tr>
 <tr><td><p>Encrypted connection</p></td><td><p>All traffic between a browser and the server travels over HTTPS.</p></td></tr>
-<tr><td><p>Payment security</p></td><td><p>All payments go through Stripe, a regulated payment processor — card details never touch S-Move's own servers.</p></td></tr>
+<tr><td><p>Payment security</p></td><td><p>The only payments SMD itself takes are sponsorship subscriptions and donations, both through Stripe, a regulated payment processor — card details never touch S-Move's own servers. Item purchases are arranged directly between shopper and seller and don't pass through SMD at all today.</p></td></tr>
 <tr><td><p>Rate limiting</p></td><td><p>Repeated failed logins or rapid-fire form submissions are automatically slowed down or blocked.</p></td></tr>
 <tr><td><p>Database-level locking (Row-Level Security)</p></td><td><p>On top of the server-side protection above, every single table in the database also has its own row-level access lock switched on — confirmed directly, not assumed. So even in the unlikely event the server's own protection were ever bypassed, the database itself still refuses to hand back data it shouldn't.</p></td></tr>
 </tbody></table>
@@ -74,6 +75,7 @@
 <tr><td><p>Pioneer</p></td><td><p>A badge and free month given to shops that join during the beta period.</p></td></tr>
 <tr><td><p>Canvassing</p></td><td><p>Visiting shops in person to help sign them up to SMD.</p></td></tr>
 <tr><td><p>Row-Level Security</p></td><td><p>A database feature that locks each record to its rightful owner at the database level, as a backup to the server's own access controls.</p></td></tr>
-<tr><td><p>Stripe</p></td><td><p>The regulated payment processor used for all card payments, subscriptions and donations.</p></td></tr>
-<tr><td><p>Webhook</p></td><td><p>An automatic notification from one system to another when something happens — e.g. Stripe telling SMD that a payment succeeded.</p></td></tr>
+<tr><td><p>Stripe</p></td><td><p>The regulated payment processor used for sponsorship subscriptions and shopper donations — both paid to S-Move Technologies. SMD does not process payment for item purchases; those are arranged directly between shopper and seller.</p></td></tr>
+<tr><td><p>Webhook</p></td><td><p>An automatic notification from one system to another when something happens — e.g. Stripe telling SMD that a subscription payment or donation succeeded.</p></td></tr>
+<tr><td><p>POS / Stock-Sync add-on</p></td><td><p>A planned future feature that would let a seller take item payment through SMD itself, with stock automatically kept in sync between their physical shop and their online listing. Not yet live — it needs further funding to finish building.</p></td></tr>
 </tbody></table>

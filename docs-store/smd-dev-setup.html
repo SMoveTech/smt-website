@@ -1,0 +1,36 @@
+<p><strong>S-Move Dealer — Developer Onboarding / Local Setup</strong></p>
+<p>Clone, configure, run, build, deploy.</p>
+<p><em>Compiled 2026-07-30 from the SMD App codebase and its <code>.claude/launch.json</code>.</em></p>
+
+<h1>1. Prerequisites</h1>
+<ul>
+<li>Node.js <strong>20.19.0</strong> (pinned in <code>.node-version</code>) — use nvm or equivalent to match it exactly.</li>
+<li>Git access to <code>SMoveTech/smove-dealer</code> on GitHub.</li>
+<li>The project's <code>.env</code> file (not committed — get it from whoever last worked on the app; see the Environment &amp; Config Reference doc for what every variable does).</li>
+</ul>
+
+<h1>2. Clone &amp; install</h1>
+<pre>git clone https://github.com/SMoveTech/smove-dealer.git
+cd smove-dealer
+npm install</pre>
+<p>Place the project's <code>.env</code> in the repo root. <code>server.js</code> calls <code>require('dotenv').config()</code> as its first line, so it loads automatically — no extra step needed.</p>
+
+<h1>3. Run it locally</h1>
+<pre>node server.js</pre>
+<p>Not <code>npm start</code> — that runs <code>dist/server.js</code>, the obfuscated production build, which won't exist until you've run <code>npm run build</code> and is painful to debug. For day-to-day development, run the plain source directly. The app listens on port <strong>3001</strong> by default (<code>PORT</code> env var).</p>
+<p>A launch config already exists at <code>.claude/launch.json</code> for tools that read it (name <code>dealer-app</code>, runs <code>node server.js</code> on port 3001).</p>
+
+<h1>4. The build step — when you actually need it</h1>
+<p><code>npm run build</code> runs <code>obfuscate.js</code>, which produces the obfuscated <code>dist/</code> tree that Railway actually deploys. You only need to run this locally if you're specifically debugging a production-only issue (e.g. testing whether a new file is correctly picked up by <code>SRC_FILES</code>) — it is not part of the normal edit/test loop.</p>
+
+<h1>5. Local-dev gotchas</h1>
+<ul>
+<li><strong>The #1 trap</strong>: a new top-level <code>.js</code> file works perfectly when you run <code>node server.js</code> locally, then crashes Railway with <code>MODULE_NOT_FOUND</code> after deploy — because it's missing from <code>SRC_FILES</code> in <code>obfuscate.js</code>. Add it in the same commit. See the Deployment Runbook §2.</li>
+<li><strong>Sessions are in-memory by default</strong> — unless <code>DATABASE_URL</code> is set in your local <code>.env</code>, restarting the dev server logs everyone out. Fine for most local work.</li>
+<li><strong>No sandbox/mock mode for external services</strong> — Stripe, Twilio, Gmail and Anthropic all need real credentials to exercise those code paths locally. Prefer test-mode keys/numbers over production credentials where the provider supports it (e.g. Stripe test mode) rather than testing payment flows against the live account.</li>
+<li><strong>Database schema drift</strong> — some tables that the app depends on were created directly in the Supabase dashboard and have no migration file in this repo (see the Data Model doc). Don't assume the repo's <code>migrations/</code>/<code>supabase/migrations/</code> folders are a complete picture of the live schema.</li>
+<li><strong>The obfuscated build isn't meant to be readable</strong> — never debug from <code>dist/</code>; always work from the source files.</li>
+</ul>
+
+<h1>6. Deploying your change</h1>
+<p>See the Deployment &amp; Release Runbook — in short: push to <code>main</code>, Railway builds and deploys automatically, there's no staging environment.</p>

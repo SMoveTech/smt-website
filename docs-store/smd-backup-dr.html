@@ -1,0 +1,37 @@
+<p><strong>S-Move Dealer — Backup &amp; Disaster Recovery</strong></p>
+<p>What's backed up, how often, where it lives, and — honestly — what restoring it actually involves today.</p>
+<p><em>Compiled 2026-07-30 from <code>backup.js</code>, <code>storage-backup.js</code> and <code>install-backup-tasks.ps1</code>.</em></p>
+
+<h1>1. What's backed up</h1>
+<table>
+<thead><tr><th>What</th><th>Script</th><th>Frequency</th><th>Destination</th></tr></thead>
+<tbody>
+<tr><td>Database (all tables)</td><td><code>backup.js</code></td><td>Hourly</td><td><code>D:\S-Move Backups</code></td></tr>
+<tr><td>Storage — <code>item-images</code>, <code>item-drafts</code>, <code>seller-logos</code></td><td><code>storage-backup.js</code></td><td>Daily, 02:15</td><td><code>D:\S-Move Backups\dealer-storage</code></td></tr>
+<tr><td>Project files (code, not data)</td><td><code>mirror-business-files.bat</code></td><td>Daily, 02:45</td><td>Mirrors the E: drive project files</td></tr>
+</tbody></table>
+<p>The three Windows Scheduled Tasks (<em>Dealer Hourly Backup</em>, <em>Dealer Storage Backup</em>, <em>S-Move Files Mirror</em>) are registered by <code>install-backup-tasks.ps1</code>, run under the same principal as the existing S-Move Hourly Backup task, so they run silently even when logged out.</p>
+
+<h1>2. Database backup — how it actually works</h1>
+<p><code>backup.js</code> doesn't rely on a fixed table list — it dynamically discovers every table exposed by the Supabase REST schema at run time, so a newly-created table (even one created ad-hoc in the dashboard, per the schema-drift notes in the Data Model doc) gets backed up automatically without any code change. Each table is fetched in pages of 1000 rows, the JSON is gzipped, and the file is written <strong>read-only</strong> (<code>chmod 0o444</code>) so it can't be accidentally overwritten. Retention is the newest <strong>336 files</strong> (~14 days of hourly backups) — older files are pruned automatically.</p>
+<p><strong>Deliberately excluded</strong> (the <code>DENYLIST</code> in <code>backup.js</code>):</p>
+<ul>
+<li><code>monzo_tokens</code> — OAuth secrets; if lost, reconnect Monzo rather than restore stale tokens.</li>
+<li><code>session</code> — transient Express session store; churns constantly, no recovery value.</li>
+</ul>
+
+<h1>3. Storage backup — a gap to flag</h1>
+<p><code>storage-backup.js</code> mirrors three buckets: <code>item-images</code>, <code>item-drafts</code>, <code>seller-logos</code> (incremental — skips files already present locally, since catalogue images are treated as immutable). It does <strong>not</strong> cover the <code>canvass-photos</code> bucket, which holds shopfront/recon photos captured by the field canvassing app. If that bucket were lost, those photos would not be recoverable from the current backup set — worth adding to <code>storage-backup.js</code>'s bucket list.</p>
+
+<h1>4. Restoring — the honest current state</h1>
+<p><strong>There is currently no dedicated restore script for SMD</strong> (SMO has a <code>restore-from-recovery.js</code>; SMD does not). Restoring today would be a manual, deliberate process:</p>
+<ol>
+<li>Locate the relevant dated <code>.json.gz</code> backup file(s) in <code>D:\S-Move Backups</code>.</li>
+<li>Decompress and inspect the table dump to confirm it's the right point in time.</li>
+<li>Re-insert/upsert the rows back into Supabase via the service-role client (e.g. a short one-off script using the same <code>@supabase/supabase-js</code> client as the rest of the app) — there is no ready-made tool for this today.</li>
+</ol>
+<p>As with every S-Move product: <strong>never restore or overwrite live data as a reflex fix to a code bug</strong> — fix the code. Restoring data is a separate, deliberate, approved action, because it can silently undo real customer/seller activity that happened after the backup was taken (new orders, new listings, payments).</p>
+<p><strong>Recommended next step:</strong> build a restore script mirroring SMO's <code>restore-from-recovery.js</code>, so a restore is a tested, repeatable command rather than an improvised one under pressure.</p>
+
+<h1>5. Storage buckets not covered by the daily backup — Supabase's own redundancy</h1>
+<p>Supabase Storage itself is durable (object storage with its own redundancy) — the daily mirror is a defence against accidental deletion or a Supabase-side incident, not the only copy. The gap in §3 is specifically about the <code>canvass-photos</code> bucket having no <em>independent</em> copy outside Supabase.</p>

@@ -39,7 +39,7 @@
 <tr><td><strong>items</strong></td><td>seller_id FK (nullable), code (SMD-XX-YYYYMMDD-NNNN), title, description, category, categories[], condition, price, status, is_stock, engagement_score, listed_at, sold_at</td><td>→ sellers; ← images, order_items, wishlists (loosely), reservations, seller_recommendations, seller_enquiries</td><td>The core listing — a mixed catalogue of seller and S-Move-owned stock</td><td>On</td></tr>
 <tr><td><strong>images</strong></td><td>item_id FK (cascade delete), url, position</td><td>→ items</td><td>Item photos; no dedicated thumbnail column — thumbnails are a storage-path convention (<code>thumb/&lt;base&gt;.webp</code>)</td><td>On</td></tr>
 <tr><td><strong>wishlists</strong></td><td>customer_email, description, keywords[], status</td><td>—</td><td>Buyer "notify me" requests for items not yet listed</td><td>On</td></tr>
-<tr><td><strong>reservations</strong></td><td>item_id FK</td><td>→ items</td><td>15-minute checkout hold on an item</td><td>On</td></tr>
+<tr><td><strong>reservations</strong></td><td>item_id FK</td><td>→ items</td><td>15-minute checkout hold on an item — <em>POS/stock-sync add-on groundwork, not live</em> (see §6)</td><td>On</td></tr>
 <tr><td><strong>bookmarks</strong>, <strong>item_views</strong>, <strong>search_terms</strong>, <strong>enquiries</strong>, <strong>failed_listings</strong>, <strong>listing_edits</strong>, <strong>description_metrics</strong>, <strong>photo_scores</strong></td><td>mostly item_id FK</td><td>→ items</td><td>Catalogue engagement/quality signals feeding the AI pricing &amp; listing-tips system</td><td>On</td></tr>
 </tbody></table>
 
@@ -56,12 +56,13 @@
 </tbody></table>
 
 <h1>6. Orders &amp; fulfilment</h1>
+<p><strong><code>orders</code>, <code>order_items</code> and <code>reservations</code> are not part of the live buying experience.</strong> No money moves through SMD for an item purchase today — a shopper enquires via the item page and pays the seller directly, outside the platform (see the Technical Architecture doc §4.10). These tables are real, committed groundwork for a planned phone-as-POS &amp; stock-sync add-on, paused pending further funding — don't read their presence as evidence that checkout is live.</p>
 <table>
 <thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th></tr></thead>
 <tbody>
-<tr><td><strong>orders</strong></td><td>session_id, customer_email/name, payment_method, total_amount, status, stripe_session_id, stripe_payment_intent_id</td><td>← order_items</td><td>One row per completed checkout</td></tr>
-<tr><td><strong>order_items</strong></td><td>order_id FK, item_id FK, sale_price</td><td>→ orders, items</td><td>Line items per order</td></tr>
-<tr><td><strong>delivery_jobs</strong></td><td>item_id FK</td><td>→ items</td><td>Courier/delivery quote requests, also raised against the SMO Ops app</td></tr>
+<tr><td><strong>orders</strong></td><td>session_id, customer_email/name, payment_method, total_amount, status, stripe_session_id, stripe_payment_intent_id</td><td>← order_items</td><td>One row per completed checkout — <em>POS/stock-sync add-on groundwork, not live</em></td></tr>
+<tr><td><strong>order_items</strong></td><td>order_id FK, item_id FK, sale_price</td><td>→ orders, items</td><td>Line items per order — <em>not live</em></td></tr>
+<tr><td><strong>delivery_jobs</strong></td><td>item_id FK</td><td>→ items</td><td>Courier/delivery quote requests, also raised against the SMO Ops app — live, independent of the checkout/orders tables above</td></tr>
 </tbody></table>
 
 <h1>7. Marketing, engagement &amp; analytics</h1>

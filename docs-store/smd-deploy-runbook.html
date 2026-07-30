@@ -1,0 +1,45 @@
+<p><strong>S-Move Dealer — Deployment &amp; Release Runbook</strong></p>
+<p>How a change goes from a local edit to live on <code>shop.s-move.co.uk</code>.</p>
+<p><em>Compiled 2026-07-30 from the SMD App codebase and Railway/GitHub config.</em></p>
+
+<h1>1. The pipeline</h1>
+<p>There is no staging environment and no CI pipeline — a push to <code>main</code> on GitHub (<code>SMoveTech/smove-dealer</code>) is picked up directly by Railway, which runs:</p>
+<ol>
+<li><code>npm install &amp;&amp; npm run build</code> — installs dependencies, then <code>npm run build</code> runs <code>obfuscate.js</code>, which obfuscates the <code>SRC_FILES</code> list into <code>dist/</code> (see the Technical Architecture doc §1.1 for the full mechanism).</li>
+<li><code>npm start</code> — runs <code>node dist/server.js</code>, i.e. the obfuscated build, never the repo-root source.</li>
+</ol>
+<p>Railway's restart policy is <code>ON_FAILURE</code> with a maximum of 3 retries (<code>railway.json</code>) — if the app crashes on boot 3 times in a row it stops retrying and stays down until a new deploy or a manual restart.</p>
+
+<h1>2. Before you push — the one rule that matters</h1>
+<p><strong>Any new top-level <code>.js</code> file that gets <code>require()</code>'d must be added to <code>SRC_FILES</code> in <code>obfuscate.js</code>, in the same commit.</strong> Miss this and the file simply isn't in <code>dist/</code> — the app runs fine locally (against un-obfuscated source) but crashes on boot in production with <code>MODULE_NOT_FOUND</code>. This is the single most common way a deploy breaks. Always check <code>obfuscate.js</code>'s <code>SRC_FILES</code> array before pushing a commit that adds a new route file or top-level module.</p>
+<p>Static assets (<code>public/</code>, <code>views/</code>) and one-off scripts (<code>backup.js</code>, <code>seed-canvass.js</code>, <code>backfill-*.js</code>) are deliberately excluded from the build — they're never meant to run through Railway.</p>
+
+<h1>3. Database changes</h1>
+<p>There is no Supabase CLI wired into this project (no <code>supabase/config.toml</code>, no <code>supabase db push</code> in any script). New tables and columns are applied <strong>manually</strong> by pasting the migration SQL into the Supabase SQL editor for project <code>wayqlbhdflyioacqbwtb</code>. Still write and commit a numbered file under <code>supabase/migrations/</code> (or the top-level <code>migrations/</code> folder, both exist and are both used) even though nothing auto-applies it — the Data Model doc already flags several live tables that were created ad-hoc in the dashboard and never captured in a migration file at all, which makes reconstructing the schema from the repo harder than it should be. Don't add to that debt.</p>
+<p>Sequence for a schema-dependent code change: run the SQL in Supabase first, confirm it applied (Supabase table editor), <em>then</em> push the code that depends on it — the two are never atomic, so a code deploy that assumes a column exists before you've added it will error at runtime.</p>
+
+<h1>4. Verifying a deploy</h1>
+<ul>
+<li>Watch the Railway deploy logs for the build to go green and for the boot log line (no <code>MODULE_NOT_FOUND</code>, no uncaught startup exception).</li>
+<li>Hit a public, unauthenticated page first (e.g. the shopper homepage or <code>/directory</code>) to confirm the process is actually serving traffic.</li>
+<li>If the change touched a webhook (Stripe checkout or billing), send a test event from the Stripe dashboard's webhook testing tool and confirm it returns 200 rather than a signature-verification failure.</li>
+<li>If the change touched email, run a real sign-up/verification flow end-to-end rather than trusting logs alone — Gmail API failures can be silent (fire-and-forget with <code>.catch()</code> in several places).</li>
+</ul>
+
+<h1>5. Rolling back</h1>
+<p>Two options, in order of preference:</p>
+<ol>
+<li><strong>Railway dashboard rollback</strong> — redeploy the previous successful build from Railway's deployment history. Fastest option, no code changes needed.</li>
+<li><strong><code>git revert</code></strong> the offending commit(s) and push to <code>main</code> — use this when the previous Railway build is no longer available or when the fix needs to be more surgical than "go back to the last build."</li>
+</ol>
+<p>There's no feature-flag system for a gradual rollout — every push to <code>main</code> goes to 100% of traffic immediately.</p>
+
+<h1>6. Known deploy gotchas</h1>
+<table>
+<thead><tr><th>Symptom</th><th>Cause</th></tr></thead>
+<tbody>
+<tr><td>Boot crash, <code>MODULE_NOT_FOUND</code></td><td>New <code>.js</code> file missing from <code>SRC_FILES</code> in <code>obfuscate.js</code> — see §2</td></tr>
+<tr><td>New feature works locally, 500s in production</td><td>An env var the feature needs was added locally to <code>.env</code> but never added to Railway's Variables tab</td></tr>
+<tr><td>Stripe webhook suddenly failing signature verification</td><td>The webhook endpoint was recreated in the Stripe dashboard (new secret) without updating <code>STRIPE_WEBHOOK_SECRET</code> / <code>STRIPE_BILLING_WEBHOOK_SECRET</code> on Railway — there are two separate webhooks and two separate secrets, easy to update the wrong one</td></tr>
+<tr><td>New table/column errors ("column does not exist")</td><td>Code deployed before the corresponding SQL was run in the Supabase editor — see §3</td></tr>
+</tbody></table>

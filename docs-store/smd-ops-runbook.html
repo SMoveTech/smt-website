@@ -1,0 +1,39 @@
+<p><strong>S-Move Dealer — Operations &amp; Incident Runbook</strong></p>
+<p>Known failure modes and their fixes, plus what monitoring exists today.</p>
+<p><em>Compiled 2026-07-30 from the SMD App codebase and prior incident history.</em></p>
+
+<h1>1. Where to look first</h1>
+<ul>
+<li><strong>Railway deploy/runtime logs</strong> — the first stop for any crash or 500. A crash-on-boot almost always means <code>MODULE_NOT_FOUND</code> (see §2) or a missing/misnamed env var.</li>
+<li><strong>Admin SMS alerts</strong> — <code>sms.js</code> texts the numbers in <code>ADMIN_ALERT_NUMBERS</code> on business applications and other key events. This runs over SMO's Twilio number (SMD has no phone number on its own Twilio account), so an alert failure could mean either Twilio account is misconfigured.</li>
+<li><strong>Stripe dashboard</strong> — webhook delivery logs show every attempt and response code; check here first for anything payment/subscription related before assuming the app is broken.</li>
+</ul>
+<p>There is currently <strong>no uptime monitoring or error-tracking service</strong> (no Sentry/equivalent found in dependencies) — the only signals are Railway's own logs, the admin SMS alerts, and users reporting problems. Worth treating as a gap.</p>
+
+<h1>2. Known failure modes &amp; fixes</h1>
+<table>
+<thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>App won't boot, Railway log shows <code>MODULE_NOT_FOUND</code></td><td>A required <code>.js</code> file is missing from <code>SRC_FILES</code> in <code>obfuscate.js</code>, so it never made it into <code>dist/</code></td><td>Add the file to <code>SRC_FILES</code>, commit, push — see the Deployment Runbook §2</td></tr>
+<tr><td>Admin/staff can't log in — page shows 403 before the password screen even loads</td><td>This isn't a login failure — it's the device gate. The <code>smdd</code> cookie isn't approved on that browser/device</td><td>Approve the device via <code>/admin/approve-device?key=&lt;DEVICE_SETUP_KEY&gt;</code>, or use the in-PWA one-time 6-digit pairing code texted to admins</td></tr>
+<tr><td>AI features (chat assistant, listing photo analysis, canvasser recon) time out or fail intermittently</td><td>Railway's IPv6 egress silently drops outbound HTTPS to the Anthropic API</td><td>Confirm <code>dns.setDefaultResultOrder('ipv4first')</code> and <code>net.setDefaultAutoSelectFamily(false)</code> are still present at the very top of <code>server.js</code> — this is a known Railway platform issue, not an app bug, and the fix must survive any refactor of that file</td></tr>
+<tr><td>Verification emails / seller notifications never arrive, no error surfaced</td><td>Railway blocks outbound SMTP ports 25/465/587 entirely — a plain SMTP path will fail silently or hang</td><td>Confirm email is going out via the Gmail API path (<code>gmail-mailer.js</code>), not SMTP; check <code>gmail_tokens</code> has a valid, non-expired OAuth token; reconnect via the Gmail admin route if needed</td></tr>
+<tr><td>Stripe checkout/subscription events not reflected in the app (sponsorship doesn't activate, payment not recorded)</td><td>Webhook signature mismatch, or the wrong endpoint URL is configured in Stripe</td><td>Check Stripe's webhook delivery log for the response code first; there are <strong>two separate webhooks</strong> (checkout vs. billing/sponsorship) with two separate secrets — confirm the failing one matches <code>STRIPE_WEBHOOK_SECRET</code> or <code>STRIPE_BILLING_WEBHOOK_SECRET</code> as appropriate</td></tr>
+<tr><td>Seller push notifications not arriving</td><td>VAPID key mismatch between what's configured server-side and what the seller's browser subscribed with</td><td>Check <code>VAPID_PUBLIC_KEY</code>/<code>VAPID_PRIVATE_KEY</code> on Railway match what's baked into the seller PWA; a key rotation invalidates all existing push subscriptions</td></tr>
+<tr><td>A brand-new table/column errors with "column does not exist"</td><td>The Supabase SQL for it was never run — see the Data Model doc's schema-drift section</td><td>Run the migration SQL directly in the Supabase editor for project <code>wayqlbhdflyioacqbwtb</code></td></tr>
+<tr><td>Session gets logged out unexpectedly / sessions don't persist across a deploy</td><td><code>DATABASE_URL</code> isn't set, so sessions are in-memory and reset on every restart</td><td>Confirm <code>DATABASE_URL</code> is set on Railway if persistent sessions are expected</td></tr>
+</tbody></table>
+
+<h1>3. Automatic self-healing (not incidents — expected behaviour)</h1>
+<ul>
+<li>Stale checkout reservations expire automatically every 60 seconds.</li>
+<li>Past-due sponsorships are dropped automatically by the dunning sweep (every 6 hours) after a configurable grace period — don't manually intervene unless a seller disputes it.</li>
+<li>Soft-deleted financial records are purged after a 14-day grace window; unconverted canvass-target product photos purge after 30 days. Neither needs manual cleanup.</li>
+</ul>
+
+<h1>4. What's NOT covered here yet</h1>
+<ul>
+<li>No documented incident-severity classification or on-call rotation — currently informal (whoever notices first).</li>
+<li>No uptime/error monitoring service — see §1. Worth adding before the marketplace opens more widely.</li>
+<li>Restoring from a backup after data loss is covered separately in the Backup &amp; Disaster Recovery doc — and currently has no dedicated restore tool, only the raw backup files.</li>
+</ul>
