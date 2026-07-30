@@ -1,0 +1,79 @@
+<p><strong>S-Move Dealer</strong></p><p>Plain-Language Platform Overview</p><p><em>A guide to what SMD is, who uses it, and how it works</em></p><p>S-Move Technologies Ltd  |  SC892508</p><p>July 2026</p>
+
+<h1>1. What Is S-Move Dealer?</h1>
+<p>S-Move Dealer ("SMD", trading as "Your Highstreet Online") is a community-first directory and marketplace built to help independent shops on the local high street thrive by banding them together online. Its guiding idea is simple: <strong>"Shop local, discover more."</strong></p>
+<p>Unlike a conventional marketplace that ranks whoever pays the most, SMD is a <strong>directory first</strong> — every independent shop in an area is listed, whether or not they've claimed or paid for anything, so shoppers can always find their local high street online. Businesses can then "claim their listing" and personalise their shop.</p>
+<table><tr><td><p><strong>🛍️  Shoppers</strong></p><p><em>Browse the directory, buy items, support favourite shops</em></p></td><td><p><strong>🏪  Sellers</strong></p><p><em>List items, personalise their shop, get discovered</em></p></td><td><p><strong>🚶  Canvassers</strong></p><p><em>Visit shops in person to help them sign up</em></p></td><td><p><strong>🖥️  Admin</strong></p><p><em>Approve sellers, moderate, run the business</em></p></td></tr></table>
+<p>Each group has its own dedicated app (a Progressive Web App, installable on a phone like a native app), all connected to the same live data.</p>
+
+<h1>2. The Directory-First Approach</h1>
+<p>Most online marketplaces let anyone pay to rank higher. SMD deliberately does the opposite:</p>
+<table><thead><tr><th><p><strong>What most marketplaces do</strong></p></th><th><p><strong>What SMD does instead</strong></p></th></tr></thead><tbody>
+<tr><td><p>Only businesses who sign up appear at all</p></td><td><p>Every shop in the area is listed from day one — signing up just lets a shop <em>claim and personalise</em> its own listing</p></td></tr>
+<tr><td><p>Paying more money moves a product higher in results</p></td><td><p>Product ranking is never for sale — a shop's position is <strong>earned</strong>, based on genuine shopper views and votes</p></td></tr>
+<tr><td><p>Sponsorship changes what shoppers can find</p></td><td><p>Sponsorship only buys a place in a <strong>sidebar</strong> — a form of discovery and community support, never a change to search results</p></td></tr>
+</tbody></table>
+
+<h1>3. The Seller Journey</h1>
+<table><tr><td><p><strong>Shop applies to join</strong></p><p><em>Via the seller app, or after a canvasser visit</em></p></td></tr></table>
+<p><strong>▼</strong></p>
+<table><tr><td><p><strong>Email and phone are verified</strong></p><p><em>A one-time code sent by text and email</em></p></td></tr></table>
+<p><strong>▼</strong></p>
+<table><tr><td><p><strong>Admin reviews and approves the shop</strong></p><p><em>Behind the scenes, AI helps check the business is genuine before approval</em></p></td></tr></table>
+<p><strong>▼</strong></p>
+<table><tr><td><p><strong>Seller personalises "My Shop"</strong></p><p><em>Colours, listing order, delivery info, and can pause the shop (e.g. on holiday) with a custom message</em></p></td></tr></table>
+<p><strong>▼</strong></p>
+<table><tr><td><p><strong>Seller lists items</strong></p><p><em>Photos, description and price — AI can suggest a title, category and price from the photo alone</em></p></td></tr></table>
+<p><strong>▼</strong></p>
+<table><tr><td><p><strong>Item appears in the community directory</strong></p><p><em>Alongside every other shop's items in one mixed catalogue</em></p></td></tr></table>
+<p>If a listing sits for a week or more with no views, the AI automatically suggests ways to improve it (better photos, a clearer title, a price adjustment).</p>
+
+<h1>4. The Shopper Journey</h1>
+<table><thead><tr><th><p><strong>Step</strong></p></th><th><p><strong>What Happens</strong></p></th></tr></thead><tbody>
+<tr><td><p>Browse</p></td><td><p>The shopper searches or filters by category and location; nearby and matching-category items are shown first, with similar items filling out the results</p></td></tr>
+<tr><td><p>Ask the AI assistant</p></td><td><p>A chat assistant can suggest items, add things to a wishlist, or pass on an enquiry to a seller</p></td></tr>
+<tr><td><p>Buy</p></td><td><p>Checkout is handled securely by Stripe; card details never touch S-Move's servers</p></td></tr>
+<tr><td><p>Support a favourite shop</p></td><td><p>Shoppers can give a monthly "vote" and cosmetic "hearts" to shops they love, or make a donation — all of which feed into the shop's earned sidebar position</p></td></tr>
+</tbody></table>
+
+<h1>5. Sponsorship — Support, Not Pay-to-Win</h1>
+<p>Shops can optionally subscribe to a sponsored sidebar placement (a small monthly fee). This buys visibility in a dedicated sidebar slot and a "Pioneer" badge for early supporters — it never changes where a shop's products appear in search or category results. Admin can also grant a free ("comp") sponsor slot to a shop, and every shop that joins during the beta period gets a free month once SMD fully launches.</p>
+
+<h1>6. Canvassing — Bringing Shops Online in Person</h1>
+<p>Because many independent shop owners are busy running their shop, SMD also has a field team that visits shops in person. A canvasser gets an AI-generated briefing before each visit (from a shopfront photo and a web search — likely owner name, how independent the shop is, existing online presence, and good talking points), records the outcome of the visit, and can photograph a shop's products ahead of time. If the shop signs up, that groundwork automatically carries over into their new live shop — nothing needs to be re-entered.</p>
+
+<h1>7. What Happens Automatically</h1>
+<table><thead><tr><th><p><strong>Trigger</strong></p></th><th><p><strong>Automatic Action</strong></p></th></tr></thead><tbody>
+<tr><td><p>Seller applies</p></td><td><p>Brand colours are pulled from their logo/website; if they came from a canvasser visit, that groundwork is carried over on approval</p></td></tr>
+<tr><td><p>A listing gets no views for 7+ days</p></td><td><p>AI generates improvement tips for the seller</p></td></tr>
+<tr><td><p>A shop's sponsorship payment fails</p></td><td><p>The system retries and eventually drops the sponsored slot after a grace period, without any manual admin action</p></td></tr>
+<tr><td><p>A shopper starts checkout</p></td><td><p>The item is held for 15 minutes so it can't be sold twice</p></td></tr>
+<tr><td><p>A canvass prospect never signs up</p></td><td><p>Any product photos captured for them are automatically deleted after 30 days</p></td></tr>
+</tbody></table>
+
+<h1>8. Security &amp; Data Protection (Plain Language)</h1>
+<table><thead><tr><th><p><strong>Protection</strong></p></th><th><p><strong>Plain-English Meaning</strong></p></th></tr></thead><tbody>
+<tr><td><p>Server-side data access</p></td><td><p>Shoppers, sellers and canvassers never connect to the database directly — only S-Move's own server does, using a privileged key that's never shipped to any browser.</p></td></tr>
+<tr><td><p>No password for shoppers</p></td><td><p>Shoppers sign in with a one-time code sent by email or text rather than a password to remember or leak.</p></td></tr>
+<tr><td><p>Encrypted passwords</p></td><td><p>Seller, staff and admin passwords are stored using one-way encryption — the original password is never stored and cannot be recovered.</p></td></tr>
+<tr><td><p>Code obfuscation</p></td><td><p>The server code is deliberately scrambled before it's deployed, making it far harder for anyone to read or copy.</p></td></tr>
+<tr><td><p>Device approval for admin</p></td><td><p>The admin panel can only be opened from a device that's been explicitly approved first.</p></td></tr>
+<tr><td><p>Encrypted connection</p></td><td><p>All traffic between a browser and the server travels over HTTPS.</p></td></tr>
+<tr><td><p>Payment security</p></td><td><p>All payments go through Stripe, a regulated payment processor — card details never touch S-Move's own servers.</p></td></tr>
+<tr><td><p>Rate limiting</p></td><td><p>Repeated failed logins or rapid-fire form submissions are automatically slowed down or blocked.</p></td></tr>
+<tr><td><p>Database-level locking (Row-Level Security)</p></td><td><p>On top of the server-side protection above, every single table in the database also has its own row-level access lock switched on — confirmed directly, not assumed. So even in the unlikely event the server's own protection were ever bypassed, the database itself still refuses to hand back data it shouldn't.</p></td></tr>
+</tbody></table>
+<p>These protections are deliberately layered rather than relying on any one of them alone — see the Technical Architecture and Data Model docs for the full detail.</p>
+
+<h1>9. Glossary of Terms</h1>
+<table><thead><tr><th><p><strong>Term</strong></p></th><th><p><strong>Plain-English Meaning</strong></p></th></tr></thead><tbody>
+<tr><td><p>PWA (Progressive Web App)</p></td><td><p>A website that behaves like an installed app — SMD has five, one each for shoppers, sellers, canvassers, staff and admin.</p></td></tr>
+<tr><td><p>Directory-first</p></td><td><p>Every shop in the area is listed by default; signing up lets a shop personalise and manage its own listing rather than being the only way to appear at all.</p></td></tr>
+<tr><td><p>Earned ranking</p></td><td><p>A shop or product's position is based on genuine shopper engagement (views, votes), never on how much has been paid.</p></td></tr>
+<tr><td><p>Sponsored sidebar</p></td><td><p>A paid discovery slot alongside the directory — a form of visible community support, not a change to search results.</p></td></tr>
+<tr><td><p>Pioneer</p></td><td><p>A badge and free month given to shops that join during the beta period.</p></td></tr>
+<tr><td><p>Canvassing</p></td><td><p>Visiting shops in person to help sign them up to SMD.</p></td></tr>
+<tr><td><p>Row-Level Security</p></td><td><p>A database feature that locks each record to its rightful owner at the database level, as a backup to the server's own access controls.</p></td></tr>
+<tr><td><p>Stripe</p></td><td><p>The regulated payment processor used for all card payments, subscriptions and donations.</p></td></tr>
+<tr><td><p>Webhook</p></td><td><p>An automatic notification from one system to another when something happens — e.g. Stripe telling SMD that a payment succeeded.</p></td></tr>
+</tbody></table>

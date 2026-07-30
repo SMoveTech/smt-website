@@ -1,0 +1,119 @@
+<p><strong>S-Move Dealer — Data Model / Schema Dictionary</strong></p>
+<p>Every table SMD actually depends on: purpose, key fields, relationships, and Row-Level Security status. Sourced from <code>supabase/schema.sql</code>, <code>supabase/migrations/001–025</code>, the ad-hoc <code>migrations/</code> folder, and cross-checked against real <code>.from(...)</code> calls in the app so this reflects what's <em>used</em>, not just what was ever proposed.</p>
+<p><em>Compiled 2026-07-30. Supabase project ref <code>wayqlbhdflyioacqbwtb</code>. Regenerate from Supabase (information_schema) when a full field-level dictionary is needed.</em></p>
+
+<h1>1. Schema drift — read this first</h1>
+<p>SMD's schema has drifted from source control in both directions, which matters for anyone trying to reconstruct the database from the repo alone:</p>
+<ul>
+<li><strong>Tables with no <code>CREATE TABLE</code> anywhere in the repo</strong> (hand-created directly in the Supabase SQL editor, actively used today): <code>sellers</code>, <code>customer_accounts</code>, <code>staff_accounts</code>, <code>admin_webauthn</code>, <code>staff_webauthn</code>, <code>approved_devices</code>, <code>seller_tokens</code>, <code>customer_tokens</code>, <code>seller_recommendations</code>, <code>seller_enquiries</code>, <code>canvass_products</code>.</li>
+<li><strong>Migrations exist but the table is never referenced in application code</strong> (likely dead — from an earlier, more ambitious schema draft): <code>tenants</code>, <code>collection_slots</code>, <code>collection_bookings</code>, <code>bundle_opportunities</code>, <code>staff_performance</code>, <code>trend_events</code>, <code>seasonal_patterns</code>, <code>acquisitions</code>, <code>margin_performance</code>, <code>external_data_sources</code>, <code>trend_signals</code>, <code>regional_demand</code>, <code>push_subscriptions</code>, <code>market_trends</code> (counted in an admin stat but never written to).</li>
+</ul>
+<p>Treat this table as the source of truth for what's <em>live</em>, and treat any full-schema export from Supabase as more authoritative than the migration files.</p>
+
+<h1>2. Row-Level Security</h1>
+<p><strong>RLS is enabled on every table — confirmed, not partial.</strong> Verified 2026-07-21 directly against the Supabase dashboard's <code>pg_tables.rowsecurity</code> (the actual source of truth for the live database): 77/77 SMD tables RLS-on, none off. This includes every table in this dictionary, regardless of whether a migration file for it exists in this repo.</p>
+<p>The migration files and <code>schema.sql</code> <strong>understate</strong> this: many actively-used tables (<code>sellers</code>, <code>customer_accounts</code>, <code>canvass_products</code>, etc. — see §1) were created directly in the Supabase SQL editor, so their RLS was switched on there too, never captured in a committed <code>.sql</code> file. Reading the repo's SQL alone would wrongly suggest RLS is missing on most tables — it isn't. Treat a live dashboard/query check as authoritative over anything in this repo when the two disagree.</p>
+<p>Posture is defence-in-depth on two independent layers: (1) the server always connects with the Supabase <strong>service/secret key</strong>, which bypasses RLS entirely — there is no browser-side Supabase client in the app, so the anon/public key is never shipped to a client; (2) RLS is on for every table regardless, so even a leaked anon key would still be blocked at the database level. Sensitive tables (tokens, OAuth stores, enquiries, donations) are RLS-on with <strong>no policy</strong>, locking them to the service role only; a handful of public-marketplace tables (e.g. <code>items</code>, <code>enquiries</code>) carry a policy that intentionally allows public read/insert.</p>
+
+<h1>3. Sellers &amp; shops</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th><th>RLS</th></tr></thead>
+<tbody>
+<tr><td><strong>sellers</strong></td><td>name, email, password_hash, town/region/address, status, seller_type, business_name, slug, logo_url, brand_colors, stripe_customer_id, stripe_subscription_id, subscription_status, sponsored, sponsored_until, pioneer, terms_accepted_at</td><td>← items, seller_tokens, seller_enquiries, seller_recommendations, votes, hearts_given, business_views</td><td>Shop/business account (trade or one-off)</td><td>On</td></tr>
+<tr><td><strong>seller_tokens</strong></td><td>seller_id FK</td><td>→ sellers</td><td>Long-lived shop-login session tokens</td><td>On</td></tr>
+<tr><td><strong>customer_accounts</strong></td><td>email, name, region, area, phone, email_verified, phone_verified, hearts_balance, public_supporter</td><td>← customer_tokens, votes, hearts_given, donations</td><td>Buyer/shopper accounts</td><td>On</td></tr>
+<tr><td><strong>customer_tokens</strong></td><td>customer_id FK</td><td>→ customer_accounts</td><td>Buyer session tokens</td><td>On</td></tr>
+<tr><td><strong>staff_accounts</strong></td><td>username, password_hash, active</td><td>← admin_webauthn/staff_webauthn (by staff_id)</td><td>Internal S-Move staff logins</td><td>On</td></tr>
+<tr><td><strong>admin_webauthn</strong> / <strong>staff_webauthn</strong></td><td>credential_id, public_key, counter, device_name, staff_id FK</td><td>→ staff_accounts</td><td>Passkey credentials for admin panel / staff login</td><td>On</td></tr>
+<tr><td><strong>approved_devices</strong></td><td>device_id, label, last_seen, approved_at</td><td>—</td><td>Device allow-list for the admin device gate</td><td>On</td></tr>
+<tr><td><strong>seller_recommendations</strong></td><td>seller_id FK, item_id FK</td><td>→ sellers, items</td><td>AI-generated tips pushed to a seller about an item</td><td>On</td></tr>
+<tr><td><strong>seller_enquiries</strong></td><td>seller_id FK, item_id FK, buyer_name/email/phone, message, delivery_requested, status</td><td>→ sellers, items</td><td>Buyer → seller contact-form messages (distinct from the older <code>enquiries</code> table)</td><td>On</td></tr>
+<tr><td><strong>mailing_list</strong> / <strong>mailing_sends</strong> / <strong>mailing_settings</strong></td><td>canvass_target_id FK (mailing_list)</td><td>→ canvass_targets</td><td>B2B advertising/outreach list, send log, campaign config</td><td>On</td></tr>
+<tr><td><strong>email_clicks</strong></td><td>correlates to mailing_list by email</td><td>—</td><td>Per-recipient click tracking on marketing-email links</td><td>On</td></tr>
+</tbody></table>
+
+<h1>4. Catalogue (items &amp; media)</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th><th>RLS</th></tr></thead>
+<tbody>
+<tr><td><strong>items</strong></td><td>seller_id FK (nullable), code (SMD-XX-YYYYMMDD-NNNN), title, description, category, categories[], condition, price, status, is_stock, engagement_score, listed_at, sold_at</td><td>→ sellers; ← images, order_items, wishlists (loosely), reservations, seller_recommendations, seller_enquiries</td><td>The core listing — a mixed catalogue of seller and S-Move-owned stock</td><td>On</td></tr>
+<tr><td><strong>images</strong></td><td>item_id FK (cascade delete), url, position</td><td>→ items</td><td>Item photos; no dedicated thumbnail column — thumbnails are a storage-path convention (<code>thumb/&lt;base&gt;.webp</code>)</td><td>On</td></tr>
+<tr><td><strong>wishlists</strong></td><td>customer_email, description, keywords[], status</td><td>—</td><td>Buyer "notify me" requests for items not yet listed</td><td>On</td></tr>
+<tr><td><strong>reservations</strong></td><td>item_id FK</td><td>→ items</td><td>15-minute checkout hold on an item</td><td>On</td></tr>
+<tr><td><strong>bookmarks</strong>, <strong>item_views</strong>, <strong>search_terms</strong>, <strong>enquiries</strong>, <strong>failed_listings</strong>, <strong>listing_edits</strong>, <strong>description_metrics</strong>, <strong>photo_scores</strong></td><td>mostly item_id FK</td><td>→ items</td><td>Catalogue engagement/quality signals feeding the AI pricing &amp; listing-tips system</td><td>On</td></tr>
+</tbody></table>
+
+<h1>5. AI / market-intelligence subsystem</h1>
+<p>A genuinely-used cluster feeding <code>claude.js</code>'s pricing and sourcing features and the admin dashboard counters:</p>
+<table>
+<thead><tr><th>Table</th><th>Relationships</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>sourcing_targets</strong></td><td>← market_scouting</td><td>Candidate sources to scout for stock</td></tr>
+<tr><td><strong>market_scouting</strong></td><td>sourcing_target_id FK; ← purchase_opportunities</td><td>A scouting run against a source</td></tr>
+<tr><td><strong>purchase_opportunities</strong></td><td>scouting_id FK; ← price_intelligence_reports</td><td>A candidate item worth buying</td></tr>
+<tr><td><strong>price_intelligence_reports</strong></td><td>opportunity_id FK</td><td>Pricing analysis on an opportunity</td></tr>
+<tr><td><strong>scan_runs</strong>, <strong>category_benchmarks</strong>, <strong>external_sold_prices</strong>, <strong>market_comparisons</strong>, <strong>ai_insights</strong>, <strong>sales</strong>, <strong>price_changes</strong></td><td>mostly item_id FK</td><td>Supporting pricing/market data</td></tr>
+</tbody></table>
+
+<h1>6. Orders &amp; fulfilment</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>orders</strong></td><td>session_id, customer_email/name, payment_method, total_amount, status, stripe_session_id, stripe_payment_intent_id</td><td>← order_items</td><td>One row per completed checkout</td></tr>
+<tr><td><strong>order_items</strong></td><td>order_id FK, item_id FK, sale_price</td><td>→ orders, items</td><td>Line items per order</td></tr>
+<tr><td><strong>delivery_jobs</strong></td><td>item_id FK</td><td>→ items</td><td>Courier/delivery quote requests, also raised against the SMO Ops app</td></tr>
+</tbody></table>
+
+<h1>7. Marketing, engagement &amp; analytics</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>page_visits</strong></td><td>path, session_id</td><td>—</td><td>Lightweight page-hit counter feeding the admin Data Monitor</td></tr>
+<tr><td><strong>waitlist</strong></td><td>—</td><td>—</td><td>Public "notify me when live" beta splash signups (distinct from <code>mailing_list</code>)</td></tr>
+<tr><td><strong>data_milestones</strong></td><td>milestone_key PK, value_at_reach, reached_at</td><td>—</td><td>Fire-once thresholds (listings/quality/sales/searches); only the reached flag persists, raw counts are computed live</td></tr>
+<tr><td><strong>donations</strong></td><td>customer_id FK (nullable = anonymous), amount_pennies, type, stripe_ref, public, show_amount</td><td>→ customer_accounts</td><td>One-off/recurring supporter gifts, booked as out-of-scope VAT income</td></tr>
+<tr><td><strong>votes</strong></td><td>customer_id FK, seller_id FK, unique per (customer, month)</td><td>→ customer_accounts, sellers</td><td>Monthly "support token" feeding the earned sidebar ranking</td></tr>
+<tr><td><strong>hearts_given</strong></td><td>customer_id FK, seller_id FK (stackable, no longer unique per month)</td><td>→ customer_accounts, sellers</td><td>Cosmetic monthly hearts</td></tr>
+<tr><td><strong>business_views</strong></td><td>seller_id FK</td><td>→ sellers</td><td>Seller shop-page view counter (mirrors item_views)</td></tr>
+<tr><td><strong>sidebar_config</strong></td><td>singleton row (id=1): vote_weight, scene boost, sponsor_price_pennies, beta_mode, dunning grace days</td><td>—</td><td>Tunables for the sponsored sidebar and beta gate</td></tr>
+</tbody></table>
+
+<h1>8. Canvassing (field sales app)</h1>
+<p>A separate bigint-identity schema (<code>migrations/canvass_schema.sql</code>), not the uuid convention used elsewhere:</p>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Relationships</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>canvassers</strong></td><td>email, pin_hash, is_admin</td><td>← canvass_targets (assigned_to), canvass_visits</td><td>Field-staff login</td></tr>
+<tr><td><strong>canvass_targets</strong></td><td>business_name, county, area, category, address, lat/lng, assigned_to FK, status; unique (business_name, area)</td><td>→ canvassers; ← canvass_recon, canvass_visits, canvass_products, mailing_list</td><td>Prospect shops to visit</td></tr>
+<tr><td><strong>canvass_recon</strong></td><td>target_id FK, created_by FK, brief (jsonb)</td><td>→ canvass_targets, canvassers</td><td>AI pre-visit briefing per target</td></tr>
+<tr><td><strong>canvass_visits</strong></td><td>target_id FK, canvasser_id FK</td><td>→ canvass_targets, canvassers</td><td>One row per doorstep visit</td></tr>
+<tr><td><strong>canvass_products</strong></td><td>target_id FK (by convention)</td><td>→ canvass_targets</td><td>Prospect's in-shop items captured pre-signup; purged 30 days after a visit for shops that never convert. <strong>No CREATE TABLE exists anywhere in the repo</strong> despite active use — a schema-drift gap worth closing.</td></tr>
+</tbody></table>
+<p>Photos captured during canvassing live in the private <code>canvass-photos</code> Storage bucket, served via signed URLs. On signup, a target's recon profile and captured product photos are migrated onto the new live <code>sellers</code> record.</p>
+
+<h1>9. Verification</h1>
+<table>
+<thead><tr><th>Table</th><th>Key fields</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>verifications</strong></td><td>unique (channel, target)</td><td>Short-lived email/phone OTP records for sign-up and login</td></tr>
+</tbody></table>
+<p>Note: <code>seller_terms_acceptance.sql</code> is not a separate table — it just adds <code>terms_accepted_at</code> / <code>terms_version</code> columns onto <code>sellers</code>.</p>
+
+<h1>10. Financials (shared SMT infrastructure)</h1>
+<table>
+<thead><tr><th>Table</th><th>Purpose</th><th>RLS</th></tr></thead>
+<tbody>
+<tr><td><strong>income_expenditure</strong></td><td>SMT-side ledger, receives Stripe income/fees from sponsorships and donations</td><td>On, no policies (service key only)</td></tr>
+<tr><td><strong>accountant_settings</strong>, <strong>accountant_access_log</strong></td><td>Accountant portal config and access audit trail</td><td>On, no policies</td></tr>
+<tr><td><strong>monzo_tokens</strong>, <strong>gmail_tokens</strong></td><td>OAuth token stores (single-row style)</td><td>On, no policies — excluded from the hourly backup deliberately</td></tr>
+</tbody></table>
+
+<h1>11. Storage (Supabase Storage buckets)</h1>
+<table>
+<thead><tr><th>Bucket</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>item-images</strong></td><td>Listing photos + <code>thumb/</code> 480px WebP thumbnails</td></tr>
+<tr><td><strong>item-drafts</strong></td><td>In-progress/unpublished listing photos</td></tr>
+<tr><td><strong>seller-logos</strong></td><td>Seller shop logos</td></tr>
+<tr><td><strong>canvass-photos</strong></td><td>Private, signed-URL-only shopfront/recon photos</td></tr>
+</tbody></table>

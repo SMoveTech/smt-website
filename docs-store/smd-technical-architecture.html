@@ -1,0 +1,90 @@
+<p><strong>S-Move Dealer — Technical Architecture</strong></p>
+<p>Full system architecture: stack, app structure, core workflows, AI usage, security and data safety.</p>
+<p><em>Compiled 2026-07-30 from a full read of the SMD App codebase (<code>E:\S-Move\SMD App</code>). Regenerate/review after any significant change to routes, schema or the build process.</em></p>
+
+<h1>1. Stack &amp; deployment</h1>
+<p>Node.js 20 (pinned <code>20.19.0</code>) + Express 4, deployed on Railway via Nixpacks. Key libraries: <code>@supabase/supabase-js</code> (DB + Storage), <code>@anthropic-ai/sdk</code>, <code>stripe</code>, <code>twilio</code>, <code>googleapis</code> (Gmail), <code>sharp</code> (images), <code>multer</code> (uploads), <code>express-session</code> + <code>connect-pg-simple</code>, <code>bcryptjs</code>, <code>@simplewebauthn/server</code> (passkeys), <code>web-push</code>, <code>express-rate-limit</code>.</p>
+<h2>1.1 Build &amp; obfuscation — the SRC_FILES gotcha</h2>
+<p><code>npm run build</code> runs <code>obfuscate.js</code>, which reads a hard-coded <code>SRC_FILES</code> array (currently <code>server.js</code>, <code>database.js</code>, <code>sidebar.js</code>, <code>dunning.js</code>, <code>data-milestones.js</code>, <code>gmail-mailer.js</code>, <code>campaign.js</code>, <code>sms.js</code>, <code>claude.js</code>, <code>geography.js</code>, <code>rate-limit.js</code>, plus every file under <code>routes/</code>), obfuscates each one (control-flow flattening, dead-code injection, string-array encoding, self-defending), and writes the result into <code>dist/</code>, mirroring the source layout. Railway's start command runs <strong>only</strong> <code>dist/server.js</code> — never the repo-root source.</p>
+<p><strong>The trap:</strong> any new top-level <code>.js</code> file that gets <code>require()</code>'d must be added to <code>SRC_FILES</code> in the same commit, or it's silently missing from <code>dist/</code> and the app crashes on boot in production with <code>MODULE_NOT_FOUND</code> — even though it runs perfectly locally against the un-obfuscated source. Static assets (<code>public/</code>, <code>views/</code>) and one-off scripts (<code>backup.js</code>, <code>seed-canvass.js</code>, <code>backfill-*.js</code>) are deliberately excluded — they run directly via Task Scheduler or <code>node</code> locally, never through the Railway build.</p>
+
+<h1>2. App structure — five PWAs</h1>
+<p><code>public/</code> holds five manifests, one per audience, each scoped to its own path with its own theme colour and icons: <code>manifest.json</code> (shopper, scope <code>/</code>), <code>seller-manifest.json</code> (<code>/seller</code>), <code>admin-manifest.json</code> (<code>/admin</code>), <code>staff-manifest.json</code> (<code>/staff</code>), <code>canvass-manifest.json</code> (<code>/canvass</code>) — plus two separate service workers (<code>sw.js</code>, <code>canvass-sw.js</code>).</p>
+<p><code>views/</code> holds one HTML shell per surface: <code>index.html</code> (shopper home), <code>directory.html</code>, <code>item.html</code>, <code>storefront.html</code> (shop page, reused for canvass shop-preview), checkout success/cancelled pages, <code>seller.html</code> / <code>seller-apply.html</code>, <code>admin.html</code>, <code>staff.html</code>, <code>canvass.html</code>, plus <code>coming-soon.html</code> (beta splash), <code>403.html</code>, <code>design-system.html</code>, and static legal/marketing pages (terms, privacy, for-shops, support, accountant, contact).</p>
+<h2>2.1 Routes</h2>
+<table>
+<thead><tr><th>File</th><th>Handles</th></tr></thead>
+<tbody>
+<tr><td>items.js</td><td>Public catalogue: browse/discovery, categories, item detail, bookmarks, seller-side item CRUD/analyse</td></tr>
+<tr><td>seller.js</td><td>Seller auth, application/onboarding, "My Shop" settings, listings, sponsorship (Stripe), push subscriptions, enquiries, testimonials, public shop page + directory feed</td></tr>
+<tr><td>admin.js</td><td>Admin auth (session + optional WebAuthn), stats/traffic, sponsor management, enquiries, wishlists, delivery jobs, seller approvals, beta/go-live controls</td></tr>
+<tr><td>customer.js</td><td>Shopper accounts (email-OTP + bearer token), hearts/votes/testimonials/donations</td></tr>
+<tr><td>checkout.js</td><td>Stripe Checkout session creation for item purchases</td></tr>
+<tr><td>chat.js</td><td>AI shopping-assistant endpoint (wraps <code>claude.js</code>)</td></tr>
+<tr><td>staff.js</td><td>Internal staff-portal APIs</td></tr>
+<tr><td>verify.js</td><td>Email/phone OTP (Gmail + Twilio Verify)</td></tr>
+<tr><td>canvass.js</td><td>Field canvassing app APIs (PIN auth)</td></tr>
+<tr><td>financials.js / monzo.js / gmail.js</td><td>SMT/SMD admin financial ledger, Monzo bank sync, Gmail OAuth connect — session-gated, mounted before <code>/api/admin</code> so they aren't shadowed</td></tr>
+</tbody></table>
+
+<h1>3. server.js — how it's wired</h1>
+<ul>
+<li><strong>IPv6 workaround</strong> — forces <code>dns.setDefaultResultOrder('ipv4first')</code> and <code>net.setDefaultAutoSelectFamily(false)</code> at boot, because Railway's IPv6 egress silently black-holes outbound HTTPS to the Anthropic API (and formerly SMTP). No dedicated undici agent — the fix is at the Node DNS/socket layer.</li>
+<li><strong>Trust proxy</strong> — <code>app.set('trust proxy', 1)</code> so secure session cookies work behind Railway's TLS-terminating proxy.</li>
+<li><strong>Stripe webhooks</strong> mounted with <code>express.raw()</code> before <code>express.json()</code>: <code>/api/billing/webhook</code> (sponsorship subscriptions — activates/cancels sponsor slots, books ledger income/fees, triggers dunning on failure, records donations) and <code>/api/checkout/webhook</code> (item-purchase completion).</li>
+<li><strong>Sessions</strong> — <code>express-session</code> backed by <code>connect-pg-simple</code> when <code>DATABASE_URL</code> is set, else in-memory. <code>SESSION_SECRET</code> is required in production.</li>
+<li><strong>Admin device gate</strong> — a custom <code>smdd</code> HttpOnly cookie, checked by a <code>requireApprovedDevice</code> middleware, applied to <code>/design-system</code>, <code>/admin</code> and <code>/admin/*</code>. Devices are approved via a keyed setup URL or an in-PWA one-time 6-digit pairing code texted to admins.</li>
+<li><strong>Beta gate</strong> — <code>sidebar_config.beta_mode</code> checked against a <code>smea</code> early-access cookie, applied to <code>/shop/:slug</code>, <code>/directory</code>, <code>/contact</code>, <code>/item/:code</code>, and the catch-all route.</li>
+<li><strong>Scheduled jobs</strong> (all <code>setInterval</code>/<code>setTimeout</code> at boot): engagement-score recalculation (30 min), data-collection milestone emails (daily), sidebar-score recalculation (30 min), dunning sweep (6h), financial soft-delete purge (daily, 14-day grace), canvass prospect-product purge (daily, 30-day retention), advertising campaign schedulers (off by default), stale-reservation expiry (every 60s).</li>
+<li><strong>Error handling</strong> — per-route try/catch returning JSON <code>{error}</code>; webhook handlers verify Stripe signatures and 400 on failure; most non-critical side effects (SMS alerts, ledger writes) are fire-and-forget with <code>.catch()</code> so they can't fail the primary request.</li>
+</ul>
+
+<h1>4. Core workflows</h1>
+<h2>4.1 Seller onboarding / "My Shop"</h2>
+<p>Public application (<code>POST /seller/apply</code>) requires accepted terms and verified email+phone, checks a blocklist, creates the seller record, and — fire-and-forget — extracts brand colours from the logo/website via Claude and, if the applicant came from canvassing, ports the canvasser's recon profile and captured product photos onto the new live shop. "My Shop" settings (colours, listing order, "holiday mode", delivery info, VAT display) are all edited through a single update endpoint that enforces a strict column allow-list. Note: "holiday mode" is implemented as <code>shop_paused</code> / <code>shop_paused_message</code> — pausing the shop with a custom message — not a dedicated boolean field.</p>
+<h2>4.2 Directory browsing / discovery ranking</h2>
+<p>The public browse endpoint fetches active+sold items, applies keyword search and category filter, then a <strong>soft location sort</strong>: items matching the requested/home town rank first, matching region second, everything else last, stable within each tier. When a category filter is active, results are padded with similar items from progressively broader categories up to a scaling quota. Separately, the <strong>sidebar ranking</strong> (the "earned, un-buyable" sponsor ordering) is computed by a scheduled job: each seller's score comes from 30-day page views plus this-month vote weight, with an additive, linearly-decaying "new sponsor" boost so a fresh sponsor glides down to its earned score over a configurable number of days.</p>
+<h2>4.3 Sponsored sidebar / Stripe</h2>
+<p>A seller-initiated Stripe Checkout subscription at an admin-configurable price (confirmed ~£49/mo is a config value, not hard-coded). Activation, renewal and cancellation are handled entirely by the billing webhook (checkout completed / invoice paid / invoice payment failed / subscription deleted), which also books Stripe income and fees into the internal ledger. Admins can grant a subscription-free "comp" slot with optional auto-expiry, and every approved beta seller gets a free month on go-live (the "Pioneer" flag). Unpaid subscriptions are dropped by the dunning sweep after a configurable grace window.</p>
+<h2>4.4 Image upload / thumbnails</h2>
+<p>Uploads are re-encoded to WebP (max edge 1600px, quality 80) for storage, and a 480px-wide WebP thumbnail at quality 72 is generated alongside, stored as <code>thumb/&lt;base&gt;.webp</code> in the <code>item-images</code> bucket. A one-off/re-runnable backfill script uses identical settings for existing images.</p>
+<h2>4.5 Email (Gmail API)</h2>
+<p>Railway blocks outbound SMTP ports 25/465/587, so <code>nodemailer</code> is used only as a local MIME builder; the finished raw message is sent via the Gmail API over HTTPS. OAuth tokens are stored in SMD's own <code>gmail_tokens</code> table, independent of SMO's Gmail connection (they share only the Google Cloud OAuth client). Scopes are send + readonly (the latter for campaign bounce-scanning).</p>
+<h2>4.6 SMS alerts</h2>
+<p>Operational alerts route through <strong>SMO's Twilio number</strong>, because SMD's own Twilio account has no phone number of its own — documented explicitly in code. Phone-OTP verification uses a separate Twilio Verify service on SMD's own account. An in-memory 10-minute dedup window prevents double-fires.</p>
+<h2>4.7 Analytics</h2>
+<p>A single beacon endpoint inserts <code>{path, session_id}</code> into <code>page_visits</code>, restricted to an allow-listed set of path keys (home, seller_apply, donate, for_shops); the admin traffic dashboard reads it back.</p>
+<h2>4.8 Canvassing integration</h2>
+<p>Fully wired into the same app under <code>/canvass</code>, with its own PIN login (bcrypt-hashed). A one-off local script imports an Excel workbook of prospects and seeds canvasser accounts. Signed-up canvass targets get their recon profile and captured product photos migrated into a live SMD seller record on application.</p>
+<h2>4.9 Donations</h2>
+<p>Handled in the same billing webhook (a Checkout session tagged with donation metadata): recorded in a <code>donations</code> table and booked as out-of-scope VAT income (a genuine gift, no benefit given — distinct from sponsorship's standard-rated VAT treatment). Recurring donation renewals are caught by the generic invoice-paid handler.</p>
+
+<h1>5. AI usage (claude.js)</h1>
+<p>The Anthropic SDK powers: <strong>analyseItemImage</strong> (listing photo → title/description/category/price suggestion, informed by staff notes and real sales data), <strong>chatWithAssistant</strong> (the customer-facing shopping copilot, a tool-use loop that can suggest items, add to wishlist, raise an enquiry, or request a delivery quote), <strong>generateListingTips</strong> (AI tips for listings with 7+ days of no views), <strong>extractBrandColors</strong> (from logo/website during onboarding), <strong>moderateSellerListing</strong> and <strong>moderateTestimonial</strong> (content moderation), <strong>checkBusinessPresence</strong> (admin tool: web-search-verifies a seller applicant's business is real before approval), <strong>reconBusiness</strong> (canvasser pre-visit briefing from a shopfront photo + web search), and <strong>extractVisitFromTranscript</strong> (turns a canvasser's dictated visit notes into structured outcome data — the raw transcript is never persisted). Several functions use Claude's server-side web-search tool with a continuation loop for longer research tasks.</p>
+
+<h1>6. Security</h1>
+<ul>
+<li><strong>Admin</strong> — session-based, password checked against either an env-var master account or a bcrypt-hashed <code>admin_users</code> table; WebAuthn/passkey registration also available. All <code>/admin</code> pages and <code>/design-system</code> require the device-approval cookie gate in addition to the session login.</li>
+<li><strong>Seller</strong> — bearer-token auth, verified server-side against <code>seller_tokens</code>.</li>
+<li><strong>Shopper</strong> — no password: email (and optional phone) OTP verification followed by a persistent bearer token.</li>
+<li><strong>Canvasser</strong> — PIN login, bcrypt-hashed.</li>
+<li><strong>Server-to-server (SMO bridge)</strong> — a shared API-key header, compared with <code>crypto.timingSafeEqual</code>, gates the enquiry/verification/apply endpoints used by SMO's shared SMS/voice bot.</li>
+<li><strong>RLS</strong> — enabled on every table (77/77, confirmed 2026-07-21 directly against the Supabase dashboard) — including tables whose RLS was switched on directly in the dashboard rather than via a committed migration. See the Data Model doc for the per-table breakdown. Combined with the app always connecting via the Supabase service key (never a browser-side client), this is defence-in-depth on two independent layers, not a single point of failure.</li>
+<li><strong>Rate limiting</strong> — five named tiers (auth, apply, submit, checkout, read) applied per-route.</li>
+<li><strong>Bot protection</strong> — a honeypot field on the public contact form silently drops bot submissions. No CAPTCHA/reCAPTCHA anywhere in the codebase.</li>
+<li>Other controls: <code>crypto.timingSafeEqual</code> for API-key comparisons, filter-string sanitisation before PostgREST interpolation, strict cookie flags (httpOnly, sameSite, secure in production), and an allow-listed internal redirect map for the email-click tracker (no open redirect).</li>
+</ul>
+
+<h1>7. Data safety</h1>
+<ul>
+<li><strong>backup.js</strong> — runs hourly via Task Scheduler; dynamically discovers every table exposed by the Supabase REST schema (so new tables are never missed), fetches all rows in pages of 1000, gzips the dump, writes it read-only to <code>D:\S-Move Backups</code>, and prunes to the newest 336 files (~14 days of hourly backups). Explicitly excludes <code>monzo_tokens</code> (OAuth secrets) and <code>session</code> (transient).</li>
+<li><strong>storage-backup.js</strong> — daily incremental mirror of the <code>item-images</code>, <code>item-drafts</code> and <code>seller-logos</code> buckets to <code>D:\S-Move Backups\dealer-storage</code>; skips files already present locally since catalogue images are immutable.</li>
+<li><strong>install-backup-tasks.ps1</strong> — registers three Windows Scheduled Tasks: Dealer Hourly Backup, Dealer Storage Backup (daily 02:15), and S-Move Files Mirror (daily 02:45, project files rather than DB/storage data).</li>
+</ul>
+
+<h1>8. Known gaps (not yet documented / verified)</h1>
+<ul>
+<li>The exact real-world Claude model identifiers referenced in <code>claude.js</code> haven't been independently verified against a live model catalogue.</li>
+<li>Whether the backup Task Scheduler jobs are currently enabled and running on the production host wasn't confirmed from code alone — only their registration script and run-logs were inspected.</li>
+<li>Full contents of <code>dunning.js</code> / <code>campaign.js</code> / <code>data-milestones.js</code> beyond what's referenced from <code>server.js</code> — worth a deeper pass if those subsystems change.</li>
+</ul>

@@ -1,0 +1,133 @@
+<p><strong>S-Move Dealer — Environment &amp; Configuration Reference</strong></p>
+<p>Every environment variable, secret and external endpoint the platform depends on. Set on the Railway service (Variables tab). Values are never stored here — this lists the <em>names</em>, what they do, and where they come from.</p>
+<p><em>Compiled 2026-07-30 from a full grep of <code>process.env</code> across the SMD App source (excluding the obfuscated <code>dist/</code> build). Confirm against the live Railway variables before relying on it.</em></p>
+
+<h1>1. Core / platform</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>PORT</td><td>HTTP port the server listens on</td><td>Defaults to 3001; set by Railway automatically in production</td></tr>
+<tr><td>NODE_ENV</td><td>Runtime mode (production / development)</td><td>Toggles secure cookies and the session-secret fallback</td></tr>
+<tr><td>APP_URL</td><td>Canonical full app URL (with protocol)</td><td>Stripe donation links/redirects; falls back to an <code>APP_DOMAIN</code>-derived URL</td></tr>
+<tr><td>APP_DOMAIN</td><td>Bare domain (no protocol)</td><td>Builds canonical links across campaign emails, Gmail links, Monzo OAuth callback, admin setup links</td></tr>
+<tr><td>DATABASE_URL</td><td>Postgres connection string for the session store</td><td>Only used if set (<code>connect-pg-simple</code>); falls back to in-memory sessions otherwise</td></tr>
+<tr><td>SESSION_SECRET</td><td>Express-session signing secret</td><td>Falls back to a computed default in production — set explicitly</td></tr>
+</tbody></table>
+
+<h1>2. Database &amp; storage (Supabase)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>SUPABASE_URL</td><td>Supabase project URL</td><td>Project ref <code>wayqlbhdflyioacqbwtb</code></td></tr>
+<tr><td>SUPABASE_SECRET_KEY</td><td>Server-side service-role key</td><td>Full DB + Storage access, bypasses RLS — server only</td></tr>
+</tbody></table>
+
+<h1>3. AI (Anthropic Claude)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ANTHROPIC_API_KEY</td><td>Powers the shopping assistant, listing-photo analysis, brand-colour extraction, moderation, business-presence checks and canvasser recon briefs (all in <code>claude.js</code>)</td><td></td></tr>
+</tbody></table>
+
+<h1>4. Payments (Stripe)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>STRIPE_SECRET_KEY</td><td>Server-side Stripe key</td><td>Gates whether Stripe features initialise at all; SMT account</td></tr>
+<tr><td>STRIPE_WEBHOOK_SECRET</td><td>Verifies the item-checkout webhook signature</td><td><code>/api/checkout/webhook</code></td></tr>
+<tr><td>STRIPE_BILLING_WEBHOOK_SECRET</td><td>Verifies the sponsorship/billing webhook signature</td><td><code>/api/billing/webhook</code> — separate endpoint and secret from checkout</td></tr>
+</tbody></table>
+
+<h1>5. Banking (Monzo)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>MONZO_CLIENT_ID</td><td>OAuth client ID for the financials Monzo connect/sync</td><td></td></tr>
+<tr><td>MONZO_CLIENT_SECRET</td><td>OAuth client secret</td><td>Tokens stored in <code>monzo_tokens</code></td></tr>
+</tbody></table>
+
+<h1>6. Telephony &amp; SMS (Twilio)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN</td><td>Main Twilio account</td><td>Fallback for alerts if <code>ALERT_TWILIO_*</code> unset; also used by phone-OTP verify</td></tr>
+<tr><td>TWILIO_FROM_NUMBER</td><td>Default sending number for admin alerts</td><td></td></tr>
+<tr><td>TWILIO_VERIFY_SERVICE_SID</td><td>Twilio Verify service for phone OTP</td><td>SMD's own account</td></tr>
+<tr><td>ALERT_TWILIO_ACCOUNT_SID / ALERT_TWILIO_AUTH_TOKEN / ALERT_TWILIO_FROM_NUMBER</td><td>Dedicated sub-account used for operational admin alerts</td><td>SMD has no phone number of its own for alerts — this routes through <strong>SMO's Twilio number</strong>; falls back to the main <code>TWILIO_*</code> vars if unset</td></tr>
+<tr><td>ADMIN_ALERT_NUMBERS</td><td>Numbers texted on business-application and ops events</td><td>Comma-separated; defaults to two hardcoded numbers if unset — contains personal phone numbers, treat as sensitive</td></tr>
+</tbody></table>
+
+<h1>7. Email (Gmail API)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET</td><td>OAuth2 client for Gmail send-as</td><td>Railway blocks outbound SMTP — all email goes via the Gmail API over HTTPS; tokens stored in <code>gmail_tokens</code></td></tr>
+<tr><td>GMAIL_FROM</td><td>Outgoing mail from-address; doubles as a fallback admin-notification recipient</td><td></td></tr>
+<tr><td>NOTIFY_EMAIL</td><td>Primary address for internal/ops notifications</td><td>Falls back to <code>GMAIL_FROM</code>, then a hardcoded address</td></tr>
+<tr><td>MAIL_DAILY_CAP</td><td>Hard cap on outbound marketing/campaign emails per day</td><td>Default 20 (<code>campaign.js</code>)</td></tr>
+</tbody></table>
+
+<h1>8. Google Maps</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>GOOGLE_MAPS_API_KEY</td><td>Maps / geocoding</td><td></td></tr>
+</tbody></table>
+
+<h1>9. Web push (VAPID)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>VAPID_PUBLIC_KEY</td><td>Public key for browser push to sellers</td><td>Also exposed to the seller frontend directly</td></tr>
+<tr><td>VAPID_PRIVATE_KEY</td><td>Private key pairing with the above</td><td>Server only</td></tr>
+<tr><td>VAPID_EMAIL</td><td>Contact <code>mailto:</code> used in the VAPID subject</td><td></td></tr>
+</tbody></table>
+
+<h1>10. WebAuthn (admin / staff passkeys)</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>WEBAUTHN_RP_ID</td><td>Relying Party ID</td><td>Defaults to <code>shop.s-move.co.uk</code></td></tr>
+<tr><td>WEBAUTHN_ORIGIN</td><td>Expected origin for WebAuthn ceremonies</td><td></td></tr>
+</tbody></table>
+
+<h1>11. Security &amp; access</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ADMIN_PASSWORD</td><td>Master admin login password</td><td>Server startup warns/blocks if unset or left as the default value</td></tr>
+<tr><td>ADMIN_EMAIL</td><td>Admin login email</td><td>Defaults to <code>alex@s-move.co.uk</code></td></tr>
+<tr><td>DEVICE_SETUP_KEY</td><td>Shared key gating the one-time admin device/passkey setup URL</td><td>The device gate itself is the <code>smdd</code> cookie — see the Security Overview doc</td></tr>
+<tr><td>SELLER_SETUP_KEY</td><td>Shared key gating seller onboarding/setup links</td><td></td></tr>
+<tr><td>EARLY_ACCESS_KEY</td><td>Gate key for the beta early-access flow / preview link</td><td><code>shop.s-move.co.uk/preview?key=...</code></td></tr>
+<tr><td>ADMIN_API_TOKEN</td><td>Bearer-style token for privileged admin API calls into checkout</td><td><code>x-admin-token</code> header</td></tr>
+<tr><td>DEALER_API_KEY</td><td>Server-to-server key with the SMO platform</td><td>Authenticates inbound requests from SMO's AI phone/chat bot and outbound delivery-job creation; compared with <code>crypto.timingSafeEqual</code></td></tr>
+<tr><td>ACCOUNTANT_PASSWORD</td><td>Separate password gating the accountant/financials view</td><td></td></tr>
+</tbody></table>
+
+<h1>12. Feature flags &amp; internal IDs</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>SMOVE_SELLER_ID</td><td>Internal seller ID representing S-Move's own stock</td><td>Internal/own-stock items are <code>seller_id IS NULL</code> or <code>= SMOVE_SELLER_ID</code> — see the Data Model doc</td></tr>
+<tr><td>SMOVE_OPS_URL</td><td>Base URL of the separate SMO app that delivery jobs are raised against</td><td>Defaults to <code>https://app.s-move.co.uk</code></td></tr>
+</tbody></table>
+
+<h1>13. One-off / dev tooling</h1>
+<table>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>CANVASS_XLSX</td><td>Path override for the canvassing prospect workbook</td><td>Used only by the local one-off <code>seed-canvass.js</code> import script</td></tr>
+</tbody></table>
+
+<h1>14. Legacy / unused — flagged for cleanup</h1>
+<p>The local <code>.env</code> defines several names that no longer appear anywhere in the current <code>.js</code> source (checked by name only, not value): <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code> (superseded by the Gmail API move), <code>SUPABASE_PUBLISHABLE_KEY</code>, <code>APIFY_TOKEN</code> (the Apify/eBay scraper was retired with buy-to-resell), and <code>SUPABASE_S3_ENDPOINT</code> / <code>SUPABASE_S3_REGION</code> / <code>SUPABASE_S3_ACCESS_KEY_ID</code> / <code>SUPABASE_S3_SECRET_ACCESS_KEY</code>. Worth a decision: remove from <code>.env</code>/Railway, or keep as reserved-for-future and note why.</p>
+
+<h1>15. Rotation &amp; handling</h1>
+<ul>
+<li><strong>Never commit secrets</strong> — all values live only in Railway Variables (and locally in an untracked <code>.env</code>).</li>
+<li><strong>The app only ever runs the obfuscated build</strong> (<code>npm start</code> → <code>dist/server.js</code>) — env-var behaviour verified in source applies identically at runtime.</li>
+<li>Stripe has <strong>two separate webhook secrets</strong> (checkout vs. billing/sponsorship) — re-copy the correct one if either endpoint is recreated.</li>
+<li>Railway's IPv6 egress is broken for this app too — <code>server.js</code> forces IPv4 DNS resolution and disables Happy-Eyeballs at boot; no separate env var controls this, it's hardcoded.</li>
+<li>If a key is rotated at the provider, update Railway and redeploy — the app reads env at boot.</li>
+</ul>
