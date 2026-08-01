@@ -45,7 +45,7 @@ const docTemplate = [
 ];
 
 module.exports = {
-  updated: '2026-07-29',
+  updated: '2026-08-01',
   docTemplate,
 
   projects: [
@@ -72,9 +72,11 @@ module.exports = {
         { h: 'Access control', body: 'Hardened accountant login behind a device-invite gate (intended 2FA). Claude has a dev owner login (claude@s-move.co.uk).' },
         { h: 'Customer comms', body: 'Quotes, invoices and emails are sent by explicit admin button (no auto-send on status change), each with a PDF preview before sending, the paired customer SMS, a Gmail-API "landed in Sent" confirmation, and per-document sent-date tracking (sent_documents table). Company-account jobs defer email opt-out to the account, so a stale per-job opt-out no longer blocks a send.' },
         { h: 'Staff expenses / petty cash', body: 'Admin logs a staff out-of-pocket expense + receipt (Financials → Petty Cash). It posts to Income & Expenditure as expenditure immediately (category "Staff Reimbursement", receipt in the private receipts bucket) so the accountant sees it, and is reimbursed on the staff member\'s next payslip as a separate non-taxable line (wages + expenses = total paid). staff_expenses table.' },
+        { h: 'Contracted staff payroll', body: 'A staff member can be marked "Contracted" with guaranteed weekly hours (e.g. 16 hrs/week for SMR\'s first contracted employee) — paid that guaranteed wage every week regardless of hours actually worked, with hours above the baseline banked and paid as a monthly overtime lump sum (same hourly rate) on the last Friday of the month. SMO does not calculate PAYE tax/NI itself: Alex enters the figures Croner/BrightHR works out via an admin deductions panel, which computes net pay; API integration with BrightHR is pending on their side.' },
         { h: 'Infra note', body: 'Railway IPv6 egress is broken — all outbound forced to IPv4: net.setDefaultAutoSelectFamily(false) disables Happy-Eyeballs at the TCP layer (covers googleapis/Gmail via node-fetch), plus a dedicated undici IPv4 agent for Anthropic and family:4 on the SMTP path. Separately, Cloudflare replaces any origin 5xx with its own Bad-Gateway page, so endpoints return HTTP 200 {success:false,message} for expected blocks/errors so the real reason reaches the UI.' },
       ],
       milestones: [
+        { date: '2026-08-01', text: 'Contracted staff payroll shipped: guaranteed weekly wage regardless of hours worked, monthly same-rate overtime lump sum, and manual tax/NI/pension deductions (from Croner/BrightHR) with computed net pay — built for SMR\'s first contracted employee' },
         { date: '2026-07-28', text: 'Staff petty-cash / expenses shipped: admin logs an expense + receipt → posts to Income & Expenditure as expenditure (for the accountant) and is reimbursed on the next payslip as a separate non-taxable line' },
         { date: '2026-07-28', text: 'Customer email reworked to button-only (no auto-send) with PDF preview, Gmail-API "Sent" verification + per-document sent-tracking; fixed IPv6/Happy-Eyeballs stall on Gmail/Twilio + Cloudflare 5xx masking' },
         { date: '2026-07-28', text: 'Admin fixes: job-card close bug, company-account standard job types + clickable job entries, inc-VAT quote entry, manual invoice description, company invoice logo + billing address, admin text-contrast boost' },
