@@ -153,8 +153,10 @@ module.exports = {
         { h: 'PWAs', body: 'Five separate PWAs (shop / seller / canvass / staff / admin), each with a stable manifest id so names do not drift.' },
         { h: 'Analytics', body: 'page_visits table + /api/track/visit beacons feed the admin Data Monitor.' },
         { h: 'Build gotcha', body: 'Every new .js must be added to SRC_FILES in obfuscate.js in the same commit or Railway crashes (MODULE_NOT_FOUND).' },
+        { h: 'Sign-up catch-net', body: 'A seller applicant who verifies email or phone on /seller-apply but never finishes the form is captured (name, business, seller type, town) into the admin Enquiries tab — tagged in the message text since `channel` is DB-constrained to chat|email|phone|web, so no schema change was needed. Upserted per applicant so re-verifying refreshes the row instead of duplicating it. Auto-flips to converted, with a pointer to the new Sellers-tab entry, the moment the full application actually completes.' },
       ],
       milestones: [
+        { date: '2026-08-01', text: 'Seller sign-up catch-net shipped — proved out same day: a verified applicant (email + phone confirmed, form never submitted) would previously have vanished with zero trace in admin; the catch-net surfaced their contact details in Enquiries, Alex reached out directly, and the sign-up was recovered' },
         { date: '2026-07-27', text: 'Go-to-market groundwork: competitor analysis (ShopAppy/Trouva) + council outreach plan + local champions map across the 4 Lothian councils (now live in the panels below)' },
         { date: '2026-07-23', text: 'First full AI cinematic advert complete (Veo + VO + captions + music)' },
         { date: '2026-07-19', text: 'Seller sign-up email fixed (Gmail API over HTTPS); SMD admin SMS alerts live' },
