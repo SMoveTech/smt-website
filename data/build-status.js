@@ -362,8 +362,8 @@ module.exports = {
         { label: 'Build conventions (CLAUDE.md)', url: '/build/doc/council-crm-claude-md' },
       ],
       docs: [
-        { id: 'daves-crm-brief', title: 'Task Brief — Contact Tracker', type: 'html', file: 'daves-crm-brief.html', note: 'The full build brief Dave works from — features, house rules, database flow, how to work with Claude', review: { status: 'current', reviewedOn: '2026-07-29' } },
-        { id: 'council-crm-claude-md', title: 'Build Conventions — CLAUDE.md', type: 'html', file: 'council-crm-claude-md.html', note: 'The conventions file Dave copies into his project as CLAUDE.md', review: { status: 'current', reviewedOn: '2026-08-02' } },
+        { id: 'daves-crm-brief', title: 'Task Brief — Contact Tracker', type: 'html', file: 'daves-crm-brief.html', raw: 'daves-crm-brief.md', downloadName: 'Dave S - Task Brief - Council Contact Tracker.md', note: 'The full build brief Dave works from — features, house rules, database flow, how to work with Claude', review: { status: 'current', reviewedOn: '2026-07-29' } },
+        { id: 'council-crm-claude-md', title: 'Build Conventions — CLAUDE.md', type: 'html', file: 'council-crm-claude-md.html', raw: 'council-crm-claude-md.md', downloadName: 'CLAUDE.md', note: 'The conventions file Dave copies into his project as CLAUDE.md', review: { status: 'current', reviewedOn: '2026-08-02' } },
       ],
       docCoverage: {
         overview:     { status: 'have', docId: 'daves-crm-brief', note: 'task brief' },

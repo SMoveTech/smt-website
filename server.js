@@ -281,6 +281,19 @@ app.get('/build/doc/:id', requireDeviceAndSession, (req, res) => {
   res.send(renderDocPage(d, body));
 });
 
+// Raw source download for a doc — the actual file a project's brief/CLAUDE.md
+// needs to become on disk (e.g. "CLAUDE.md"), not the rendered HTML reading page.
+app.get('/build/doc/:id/download', requireDeviceAndSession, (req, res) => {
+  const d = docIndex[req.params.id];
+  if (!d || !d.raw) return res.status(404).send('No raw file for this document.');
+  const file = path.join(DOC_DIR, d.raw);
+  if (!file.startsWith(DOC_DIR + path.sep) || !fs.existsSync(file)) return res.status(404).send('Document not found.');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${d.downloadName || d.raw}"`);
+  res.sendFile(file);
+});
+
 // Admin recovery: reset another user's password → returns a temp password to hand over.
 app.post('/build/users/reset', requireDeviceAndSession, async (req, res) => {
   const target = String((req.body && req.body.username) || '').toLowerCase();
@@ -467,6 +480,43 @@ app.get('/build/claude-bundle', requireDeviceAndSession, async (req, res) => {
   } catch (e) {
     console.error('[bundle] failed:', e.message);
     res.status(500).send('Could not build the setup bundle.');
+  }
+});
+
+// Per-project setup bundle: every doc that has a raw source file (task brief,
+// project CLAUDE.md, etc.), zipped under the exact filenames the brief tells
+// the developer to drop into their empty project folder.
+app.get('/build/project-bundle/:key', requireDeviceAndSession, (req, res) => {
+  const project = buildStatus.projects.find(p => p.key === req.params.key);
+  if (!project) return res.status(404).send('Project not found.');
+  const docs = (project.docs || []).filter(d => d.raw);
+  if (!docs.length) return res.status(404).send('No downloadable files for this project yet.');
+  try {
+    const files = [];
+    for (const d of docs) {
+      const file = path.join(DOC_DIR, d.raw);
+      if (!fs.existsSync(file)) continue;
+      files.push({ name: d.downloadName || d.raw, buffer: fs.readFileSync(file) });
+    }
+    const fileList = docs.map(d => `  - ${d.downloadName || d.raw}  (${d.title})`).join('\n');
+    const readme = [
+      `${project.name} — project setup files`,
+      '',
+      'Drop these files straight into your empty project folder, then open a terminal',
+      'there and run "claude". Point Claude at these files as your starting context —',
+      'the task brief tells you exactly how to kick off the first session.',
+      '',
+      fileList,
+    ].join('\n');
+    files.push({ name: 'README.txt', buffer: Buffer.from(readme, 'utf8') });
+    const zip = zipStore(files);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${project.key}-setup.zip"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(zip);
+  } catch (e) {
+    console.error('[project-bundle] failed:', e.message);
+    res.status(500).send('Could not build the project bundle.');
   }
 });
 
