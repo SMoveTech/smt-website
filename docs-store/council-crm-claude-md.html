@@ -1,0 +1,57 @@
+<p><strong>Council &amp; Stakeholder CRM — Build Conventions</strong></p>
+<p>This is an internal S-Move tool to log calls, emails and plans with key contacts (councils, partners), each with an outcome and a planned next step, so the team stays on the same page. It will be reviewed and taken live by another developer (Alex), so <strong>follow these conventions exactly</strong> to keep it easy to integrate.</p>
+
+<h1>Golden rules</h1>
+<ul>
+<li><strong>Ask before installing new dependencies or changing the stack.</strong> Keep it boring and standard.</li>
+<li><strong>Never commit secrets.</strong> All keys go in a <code>.env</code> file that is listed in <code>.gitignore</code>.</li>
+<li><strong>Do NOT set up git or Railway deployment.</strong> Build and run locally only. Go-live is handled separately.</li>
+<li><strong>Use your own free Supabase project.</strong> Sign up (it's free) and create a throwaway project — walk the developer through it step by step; you can't click the site for them. It is isolated with no production/customer data, so experiment freely; do not connect to any other database. When it's ready, Alex ports the tables into the live project.</li>
+</ul>
+
+<h1>Stack (match the house style — do not substitute)</h1>
+<ul>
+<li><strong>Backend:</strong> Node.js + Express. A single <code>server.js</code> is fine to start.</li>
+<li><strong>Frontend:</strong> plain HTML + CSS + vanilla JS served by the Node server. No React/Next/build tooling unless asked.</li>
+<li><strong>Database:</strong> Supabase (Postgres), on the developer's own free account (see Golden rules).</li>
+</ul>
+
+<h1>Supabase &amp; security model (important)</h1>
+<ul>
+<li>The <strong>browser never talks to Supabase directly</strong> and never sees any Supabase key.</li>
+<li>The browser calls <strong>your Node server</strong>; the Node server talks to Supabase using the <strong>service-role key</strong> (kept in <code>.env</code>, server-side only).</li>
+<li><strong>Every table has Row Level Security (RLS) turned ON.</strong> Even though the server uses the service role, RLS-on is required as defence-in-depth. Write the <code>enable row level security</code> statement for every table in the schema.</li>
+<li>Put the full database schema in a single <strong><code>schema.sql</code></strong> file in the repo root, so the whole data model can be reviewed at a glance. Include RLS statements in it.</li>
+<li><strong>All Supabase details come from env vars</strong> (<code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>) — never hard-coded — so the app can be re-pointed at the live project on handover with zero code changes.</li>
+</ul>
+
+<h1>Data conventions (every table)</h1>
+<ul>
+<li><code>id</code> (uuid, primary key, default gen_random_uuid())</li>
+<li><code>created_at</code> (timestamptz, default now())</li>
+<li><code>updated_at</code> (timestamptz, default now())</li>
+<li><strong>Soft delete only:</strong> a <code>deleted_at</code> (timestamptz, nullable) column. <strong>Never hard-delete rows.</strong> "Deleting" sets <code>deleted_at</code>; queries filter out non-null <code>deleted_at</code>.</li>
+</ul>
+
+<h1>Suggested data model (adjust with Alex) — prefix every table <code>outreach_</code></h1>
+<p>The prefix keeps them tidy and collision-free when Alex ports them into the shared live project.</p>
+<ul>
+<li><code>outreach_contacts</code> — the key people/organisations (name, organisation, role, email, phone, council/area, priority, why_they_matter, source_url, confirm_before_contacting bool, notes)</li>
+<li><code>outreach_interactions</code> — one row per call/email/meeting (contact_id FK, type [call|email|meeting|note], summary, occurred_at, outcome, logged_by)</li>
+<li><code>outreach_emails</code> — sent/received emails (contact_id FK, direction [sent|received], subject, body, occurred_at)</li>
+<li><code>outreach_next_steps</code> — planned follow-ups (contact_id FK, description, due_date, status [open|done], owner)</li>
+</ul>
+
+<h1>Auth</h1>
+<p>A simple shared login is fine for a small trusted team (a single password check against an env var, or a basic staff login). Keep it simple; do not build a full account system unless asked.</p>
+
+<h1>Deliverables to hand back</h1>
+<ol>
+<li>The project folder (source).</li>
+<li><code>schema.sql</code> — the full, RLS-enabled schema.</li>
+<li>A short <code>README.md</code> — how to run locally, and a list of the API endpoints.</li>
+<li>A <code>.env.example</code> listing every environment variable needed (with placeholder values, no real secrets).</li>
+</ol>
+
+<h1>Deployment note (for reference — you do NOT do this)</h1>
+<p>When Alex takes it live on Railway, outbound network calls must be forced to IPv4. You don't need to add this; just don't build anything that would conflict with it.</p>

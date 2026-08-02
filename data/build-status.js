@@ -358,16 +358,17 @@ module.exports = {
         'Hand over as a zip; Alex runs schema.sql in the live project + deploys',
       ],
       refs: [
-        { label: 'Task brief', url: 'file:///E:/Claude/Dave%20S%20-%20Task%20Brief%20-%20Council%20Contact%20Tracker.md' },
-        { label: 'Build conventions (CLAUDE.md)', url: 'file:///E:/Claude/council-crm-CLAUDE.md' },
+        { label: 'Task brief', url: '/build/doc/daves-crm-brief' },
+        { label: 'Build conventions (CLAUDE.md)', url: '/build/doc/council-crm-claude-md' },
       ],
       docs: [
         { id: 'daves-crm-brief', title: 'Task Brief — Contact Tracker', type: 'html', file: 'daves-crm-brief.html', note: 'The full build brief Dave works from — features, house rules, database flow, how to work with Claude', review: { status: 'current', reviewedOn: '2026-07-29' } },
+        { id: 'council-crm-claude-md', title: 'Build Conventions — CLAUDE.md', type: 'html', file: 'council-crm-claude-md.html', note: 'The conventions file Dave copies into his project as CLAUDE.md', review: { status: 'current', reviewedOn: '2026-08-02' } },
       ],
       docCoverage: {
         overview:     { status: 'have', docId: 'daves-crm-brief', note: 'task brief' },
         roadmap:      { status: 'have', note: 'this dashboard' },
-        architecture: { status: 'partial', note: 'planned bullets here + CLAUDE.md conventions' },
+        architecture: { status: 'partial', docId: 'council-crm-claude-md', note: 'planned bullets here + CLAUDE.md conventions' },
         datamodel:    { status: 'partial', note: 'outreach_ tables agreed; schema.sql to be written' },
         api:          { status: 'missing' },
         integrations: { status: 'na', note: 'none in the MVP (Gmail sync is out of scope)' },
