@@ -275,6 +275,11 @@ app.get('/build/doc/:id', requireDeviceAndSession, (req, res) => {
     res.setHeader('Content-Disposition', `inline; filename="${d.id}.pdf"`);
     return res.sendFile(file);
   }
+  if (d.type === 'xlsx') {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${d.id}.xlsx"`);
+    return res.sendFile(file);
+  }
   let body;
   try { body = fs.readFileSync(file, 'utf8'); } catch { return res.status(404).send('Document not found.'); }
   html(res);
