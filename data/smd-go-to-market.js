@@ -16,7 +16,11 @@
 module.exports = {
   // Drop this into the SMD project object as:  goToMarket: { ... }
   goToMarket: {
-    updated: '2026-07-27',
+    updated: '2026-08-04',
+    documents: [
+      { label: 'East Lothian Council Briefing (Cllr McMillan) — PDF', url: '/build/doc/smd-council-briefing-mcmillan' },
+      { label: 'Funding Expenditure Analysis (East Lothian ask) — Excel', url: '/build/doc/smd-funding-expenditure-analysis' },
+    ],
     summary:
       'Directory-first community bootstrap needs local backing. Two routes per council: the Economic Development team (strategy + funding + BID relationships) and the BID/traders body (fast, warm route to actual shops). Every council speaks "Community Wealth Building" — SMD maps to it almost word-for-word. Start on home turf (East Lothian), use it as the reference site, approach Edinburgh last via its BIDs.',
 

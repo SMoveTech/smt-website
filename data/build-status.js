@@ -212,6 +212,7 @@ module.exports = {
         { id: 'smd-scale-performance', title: 'Scale & Performance — Planning Doc', type: 'pdf', file: 'smd-scale-performance.pdf', review: { status: 'review' } },
         { id: 'smd-scaling-cost', title: 'Scaling & Cost Plan', type: 'pdf', file: 'smd-scaling-cost.pdf', review: { status: 'review' } },
         { id: 'smd-direct-checkout', title: 'Direct Checkout — Pre-Planning Brief', type: 'pdf', file: 'smd-direct-checkout.pdf', review: { status: 'review' } },
+        { id: 'smd-council-briefing-mcmillan', title: 'East Lothian Council Briefing (Cllr McMillan)', type: 'pdf', file: 'smd-council-briefing-mcmillan.pdf', note: '14-page leave-behind for the potential meeting with Provost Cllr John McMillan — competitor-failure-mode pitch, funding ask, precedent evidence', review: { status: 'current', reviewedOn: '2026-08-04' } },
         { id: 'smd-funding-expenditure-analysis', title: 'Funding Expenditure Analysis (East Lothian ask)', type: 'xlsx', file: 'smd-funding-expenditure-analysis.xlsx', note: 'Live formula-driven cost/funding model backing the East Lothian Council briefing — current running cost, the modest-funding ask, and the match-funding check against the £9k SMR→SMT route', review: { status: 'current', reviewedOn: '2026-08-04' } },
       ],
       competitorAnalysis: smdCompetitorAnalysis,
