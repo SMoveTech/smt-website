@@ -1,0 +1,103 @@
+<p><strong>S-Move Dealer — Data Protection &amp; Privacy (UK GDPR)</strong></p>
+<p>How the platform collects, uses, stores and protects personal data, and how to handle data-subject requests. This is an internal reference for the controller — distinct from the public-facing <a href="/privacy">Privacy Policy</a> published on the app itself.</p>
+<p style="color:#fbbf24"><strong>⚠ Interim safe basis.</strong> The public Privacy Policy is itself marked interim (v1.0, 29 Jul 2026) — prepared internally, not yet solicitor-reviewed. This doc takes the same cautious position: the longest applicable retention period is assumed, and standard safeguards are treated as required. Items still needing formal sign-off are listed in §9.</p>
+
+<h1>1. Controller &amp; scope</h1>
+<ul>
+<li><strong>Data controller:</strong> S-Move Technologies Ltd (SMT), SC892508, registered office 21 Limeylands Crescent, Ormiston, EH35 5LE — <strong>not</strong> S-Move Removals Ltd (SMR). SMT owns and operates both SMD and SMO.</li>
+<li><strong>ICO registration:</strong> SMT processes personal data electronically as a business, so the ICO data-protection fee is assumed to apply. Registration to be completed/confirmed — see §9.</li>
+<li><strong>Scope:</strong> the S-Move Dealer platform (shop.s-move.co.uk and its <code>/seller</code>, <code>/admin</code>, <code>/staff</code>, <code>/canvass</code> surfaces) and its Supabase project (<code>wayqlbhdflyioacqbwtb</code>) — seller, shopper, canvassing, and marketing/mailing data.</li>
+<li><strong>Contact for data matters:</strong> alex@s-move.co.uk. No statutory Data Protection Officer is required (SMT is a small controller not doing large-scale or special-category processing); the named contact fulfils the role.</li>
+</ul>
+
+<h1>2. Personal data inventory</h1>
+<table>
+<thead><tr><th>Category</th><th>Data</th><th>Where (tables)</th><th>Lawful basis</th></tr></thead>
+<tbody>
+<tr><td>Seller / shop accounts</td><td>Name, business name, email, phone, address/town/region, password hash, logo, brand colours, Stripe customer/subscription IDs</td><td>sellers, seller_tokens</td><td>Contract</td></tr>
+<tr><td>Shopper / buyer accounts</td><td>Name, email, phone (optional), region/area, verification flags, hearts balance</td><td>customer_accounts, customer_tokens</td><td>Contract / consent (registration is optional — browsing doesn't require an account)</td></tr>
+<tr><td>Buyer→seller enquiries</td><td>Buyer name, email, phone, message, delivery preference</td><td>seller_enquiries, enquiries</td><td>Contract / legitimate interest</td></tr>
+<tr><td>Wishlist requests</td><td>Buyer email, free-text description of what they're looking for</td><td>wishlists</td><td>Consent (explicitly opted in to being contacted when a match appears)</td></tr>
+<tr><td>Donations / support</td><td>Optional display name, amount (card data held by Stripe, not us)</td><td>donations</td><td>Contract (processing the gift) — anonymous by default, a display name is only stored if the donor opts in to show it</td></tr>
+<tr><td>Engagement (hearts/votes)</td><td>Which shopper supported which seller, and when</td><td>votes, hearts_given</td><td>Contract / legitimate interest</td></tr>
+<tr><td>Verification (OTP)</td><td>Email/phone + short-lived code</td><td>verifications</td><td>Legitimate interest (fraud prevention / account security)</td></tr>
+<tr><td>Canvasser (field staff)</td><td>Email, PIN hash</td><td>canvassers</td><td>Contract (employment/engagement)</td></tr>
+<tr><td>Canvass prospects</td><td>Business name, address, lat/lng, category — <strong>business</strong> data, not an individual's personal data, though a named contact at the shop may appear in visit notes</td><td>canvass_targets, canvass_recon, canvass_visits, canvass_products</td><td>Legitimate interest (B2B outreach)</td></tr>
+<tr><td>Canvass photos</td><td>Shopfront/recon photos, possibly incidentally including people</td><td><code>canvass-photos</code> Storage bucket</td><td>Legitimate interest</td></tr>
+<tr><td>Marketing / outreach</td><td>Shop email addresses, click-tracking per recipient</td><td>mailing_list, mailing_sends, email_clicks</td><td>Legitimate interest (B2B) — one-click unsubscribe honoured, see §3</td></tr>
+<tr><td>Waitlist</td><td>Email address, signup source</td><td>waitlist</td><td>Consent</td></tr>
+<tr><td>Internal staff / admin</td><td>Username, password hash, passkey credentials</td><td>staff_accounts, admin_webauthn, staff_webauthn, approved_devices</td><td>Legitimate interest (security) / contract (employment)</td></tr>
+<tr><td>Analytics</td><td>Path visited + a locally-generated session ID — no account link, no IP/device fingerprint stored</td><td>page_visits</td><td>Legitimate interest — low privacy risk (pseudonymous, minimal)</td></tr>
+</tbody>
+</table>
+
+<h1>3. Data subjects' rights &amp; how to handle them</h1>
+<ul>
+<li><strong>Access (SAR):</strong> export the person's records across the tables in §2 (seller by seller_id; shopper by customer_id/token; canvasser by canvasser_id). Respond within one month.</li>
+<li><strong>Rectification:</strong> sellers self-serve most of their own data via "My Shop"; shoppers via account settings; anything else corrected via the admin console.</li>
+<li><strong>Erasure:</strong> honour <em>except</em> where a legal retention obligation applies (financial records tied to sponsorship/donations — see §4). Canvass prospect data that never converts to a seller already auto-purges after 30 days (§4) — a genuine automated erasure control, not just policy.</li>
+<li><strong>Portability:</strong> provide data in a structured format (JSON/CSV export).</li>
+<li><strong>Objection / restriction:</strong> the mailing list and marketing emails already carry one-click unsubscribe, honoured automatically; stop any other non-essential processing on request.</li>
+<li>Log every request (who, when, what was done) for accountability.</li>
+</ul>
+
+<h1>4. Retention schedule</h1>
+<p><em>Safe basis: the longest applicable period is assumed, and data is never auto-deleted before it. Periods to be reviewed as the platform matures.</em></p>
+<table>
+<thead><tr><th>Data</th><th>Retention</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Canvass prospect products (<code>canvass_products</code>)</td><td><strong>30 days after a visit, auto-purged</strong> for shops that never convert to a seller</td><td>Already live and automated — a daily scheduled job (see Ops &amp; Incident Runbook)</td></tr>
+<tr><td>Financial records (sponsorship/donation income, in the shared SMT ledger)</td><td>6 years + current year</td><td>HMRC / Companies Act</td></tr>
+<tr><td>Seller/shop accounts</td><td>Duration of the relationship, then review before deletion/anonymisation</td><td>Contract + legitimate business record</td></tr>
+<tr><td>Shopper accounts</td><td>Duration of the relationship (no sales-tax record like SMO's job history — lower retention need), then review</td><td>Contract</td></tr>
+<tr><td>Buyer/seller enquiries</td><td>2 years, then review</td><td>Evidence of platform activity; shorter than SMO's job records since no payment flows through SMD for these</td></tr>
+<tr><td>Marketing / mailing list</td><td>Until unsubscribed or the business is confirmed closed</td><td>Legitimate interest</td></tr>
+<tr><td>Auth/security (sessions, verification codes, device approvals)</td><td>Verification codes are already short-lived by design; sessions/devices 12 months</td><td>No statutory requirement — kept only as long as useful for security</td></tr>
+</tbody>
+</table>
+
+<h1>5. Processors &amp; third-party sharing</h1>
+<table>
+<thead><tr><th>Processor</th><th>Data shared</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>Supabase</td><td>All platform data + uploaded images</td><td>Database + file storage (hosting region to be verified — see §9)</td></tr>
+<tr><td>Stripe</td><td>Payment details, donor/sponsor email — <strong>SMT's own Stripe account</strong>, distinct from SMR's</td><td>Sponsorship subscriptions and donations. No item-purchase payments flow through SMD today (see the Technical Architecture doc §4.10) — Stripe here never touches shopper/seller-item money.</td></tr>
+<tr><td>Twilio</td><td>Phone numbers, OTP codes</td><td>Phone verification (SMD's own Twilio account/number). Note: operational <em>admin</em> alerts (not customer-facing) route through <strong>SMO's Twilio number</strong> instead, since SMD has none of its own — a minor inter-company processing detail, not shopper/seller data.</td></tr>
+<tr><td>Google (Gmail API)</td><td>Email content/recipients (sellers, shoppers who register)</td><td>Transactional email send</td></tr>
+<tr><td>Google (Maps/Places)</td><td>Addresses typed by users</td><td>Address autocomplete/lookup</td></tr>
+<tr><td>Anthropic (Claude)</td><td>Listing text/photos, enquiry/chat text, canvasser recon notes and photos</td><td>AI features (pricing, chat assistant, moderation, recon briefings). No special-category data is deliberately sent; under Anthropic's API terms, inputs are not used to train models.</td></tr>
+</tbody>
+</table>
+<p>Each processor is relied on under its <strong>standard data-processing agreement</strong> (published business terms). Where a processor stores data outside the UK/EU (e.g. US-based services), reliance is on that provider's <strong>Standard Contractual Clauses / UK IDTA / adequacy</strong> safeguards. To be formally recorded per-processor — see §9.</p>
+
+<h1>6. Security measures</h1>
+<ul>
+<li>Service-role DB access server-side only; no browser-side Supabase client ships an anon key. Row-Level Security is enabled on every table (77/77, confirmed by dashboard audit) as defence-in-depth.</li>
+<li>Admin access behind a device-approval gate plus session login; WebAuthn/passkeys supported for admin and staff.</li>
+<li>Seller access via bearer token verified server-side; shopper access via OTP-issued bearer token (no password to leak); canvasser access via bcrypt-hashed PIN.</li>
+<li>Server-to-server calls from SMO's shared bot are gated by an API key compared with <code>crypto.timingSafeEqual</code> — not a plain string match.</li>
+<li>Secrets in environment variables only; never committed. See Environment &amp; Config Reference.</li>
+<li>Hourly backups to a separate location (excluding OAuth token tables); code in version control. See Backup &amp; Disaster Recovery.</li>
+<li>Passwords/PINs stored hashed, never in plain text.</li>
+</ul>
+
+<h1>7. Personal data breach response</h1>
+<ol>
+<li>Contain — revoke affected credentials/devices/keys.</li>
+<li>Assess — what data, whose, how many, likely harm.</li>
+<li>Report to the ICO within <strong>72 hours</strong> if it's a reportable risk to individuals, via the ICO's online breach-reporting service. Alex (alex@s-move.co.uk) is the responsible person.</li>
+<li>Notify affected individuals if high risk.</li>
+<li>Record the breach and remediation regardless of whether it's reportable.</li>
+</ol>
+
+<h1>8. DPIA</h1>
+<p>A full Data Protection Impact Assessment is not mandatory at SMT's current small scale for SMD (no large-scale or systematic special-category processing). The canvassing subsystem captures business premises and shopfronts, not individuals' homes, which keeps that risk lower than SMO's customer/address data. Given AI processing of enquiry/chat text and photos, a short <strong>screening assessment</strong> is nonetheless advisable — see §9.</p>
+
+<h1>9. Open items — pending</h1>
+<ul>
+<li><strong>ICO registration</strong> — complete/confirm SMT's data-protection fee registration (covers both SMD and SMO, since SMT is the controller for both) and record the reference (§1).</li>
+<li><strong>Supabase region</strong> — verify the SMD project's hosting region; if outside UK/EU, document the transfer safeguard (§5).</li>
+<li><strong>Processor DPAs</strong> — record each processor's DPA + international-transfer safeguard formally (§5).</li>
+<li><strong>DPIA screening</strong> — not yet done for SMD (SMO's has been completed as a separate doc); low priority given the lower-risk data profile in §8, but worth doing once resources allow.</li>
+<li><strong>Public Privacy Policy</strong> — already live at <code>/privacy</code> (v1.0, interim, 29 Jul 2026) — ahead of where SMO's was at the equivalent stage. Still to do: solicitor review once resources allow.</li>
+</ul>
