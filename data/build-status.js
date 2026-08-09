@@ -45,7 +45,7 @@ const docTemplate = [
 ];
 
 module.exports = {
-  updated: '2026-08-01',
+  updated: '2026-08-09',
   docTemplate,
 
   projects: [
@@ -243,26 +243,31 @@ module.exports = {
       name: 'Canvass',
       short: 'SMC',
       tagline: 'Field canvassing app + shop recon',
-      status: 'building',
-      stagePct: 45,
-      stageLabel: 'Built, not yet pushed — needs schema migration + seed before go-live',
-      summary: 'A field PWA to visit and onboard independent shops for SMD: track visits and run AI shopfront-photo recon. Feeds the directory and the claim-your-listing funnel.',
-      stack: ['PWA (/canvass)', 'Node / Express', 'Supabase', 'Claude vision (shopfront recon)'],
+      status: 'live',
+      stagePct: 70,
+      stageLabel: 'Live in the field — canvassers actively visiting shops, logging recon and products',
+      summary: 'A field PWA to visit and onboard independent shops for SMD: track visits, photograph products, and run AI shopfront-photo recon. Feeds the directory and the claim-your-listing funnel.',
+      stack: ['PWA (/canvass)', 'Node / Express', 'Supabase', 'Claude vision (shopfront + product recon)', 'IndexedDB offline outbox'],
       architecture: [
         { h: 'Visit tracking', body: 'Field workers log shop visits; no-website shops are the top onboarding targets.' },
         { h: 'AI recon', body: 'Shopfront-photo recon produces a quick read on each shop to prime the visit.' },
+        { h: 'Products', body: 'Canvassers photograph a shop\'s products in-shop; Claude drafts title/price/description/category. Tapping a product card opens a full photo + description view (not just an edit form) so the pitch reads well to the shop owner on the spot.' },
+        { h: 'Offline outbox', body: 'Shopfront/product/visit photos taken with no signal queue locally (IndexedDB) rather than being lost. A header status pill shows live online/offline state and how many items are waiting; nothing syncs automatically — a canvasser opens the queue (thumbnail + discard per item) and taps Sync explicitly, so a stale queued photo from an earlier session can never get silently submitted mid-visit under someone else\'s name.' },
         { h: 'Research base', body: 'Per-council Excel of independent shops across all 4 regions is complete — roughly 627 shops, of which ~336 have no website.' },
       ],
       milestones: [
-        { date: '2026-07-05', text: 'Canvassing field app built (needs canvass_schema.sql + seed-canvass.js; not pushed)' },
+        { date: '2026-08-09', text: 'Diagnosed a live bug from field reports: the offline outbox auto-flushed the instant the app regained signal or reopened, with no record of who queued an item — a stale shopfront photo queued earlier by one canvasser (on the shared field phone) got silently submitted as a new "Unknown shopfront" under whoever next opened the app, mid-visit' },
+        { date: '2026-08-09', text: 'Replaced auto-sync with a header status pill (online/offline + pending count) and an offline-queue view with per-item photo thumbnail + discard and an explicit "Sync now" — nothing sends until a canvasser chooses to send it' },
+        { date: '2026-08-09', text: 'Product cards now open a full photo + description view (previously only an Edit text form); all modal textareas auto-grow to fit their content instead of a cramped fixed-height scrollbox' },
+        { date: '2026-07-05', text: 'Canvassing field app built and pushed live; schema migrated and seeded' },
         { date: '2026-07-05', text: 'Canvass research complete: 4 regions, ~627 shops (~336 no-website)' },
       ],
       next: [
-        'Run canvass_schema.sql + node seed-canvass.js, then push to deploy',
-        'Field-test the visit + recon flow',
+        'Scope offline-queue items to the canvasser who captured them (currently attributed to whoever is logged in at sync time, not whoever queued it)',
         'Canvass Intelligence Engine (AI pre-call briefs) is parked as a potential 3rd SMT product until SMD self-funds',
       ],
       refs: [
+        { label: 'Live app', url: 'https://shop.s-move.co.uk/canvass' },
         { label: 'Canvass research', url: 'file:///E:/Claude/Canvas%20Research/' },
       ],
       docCoverage: {
@@ -273,10 +278,10 @@ module.exports = {
         api:          { status: 'missing' },
         integrations: { status: 'na', note: 'shares SMD/Supabase + Claude vision' },
         env:          { status: 'missing' },
-        deploy:       { status: 'missing', note: 'not yet pushed' },
+        deploy:       { status: 'have', note: 'Railway auto-deploy from the smove-dealer repo, same pipeline as SMD' },
         ops:          { status: 'na' },
         backup:       { status: 'partial', note: 'shared Dealer Supabase backup' },
-        security:     { status: 'partial' },
+        security:     { status: 'partial', note: 'PIN-based canvasser login; the local offline queue lives in browser storage on a shared field device, not yet scoped to canvasser identity — mitigated 2026-08-09 by requiring an explicit review-and-sync step instead of silent auto-flush' },
         gdpr:         { status: 'missing', note: 'captures shop/visit data + photos' },
         testing:      { status: 'missing' },
         userguides:   { status: 'missing', note: 'field-worker guide needed' },
