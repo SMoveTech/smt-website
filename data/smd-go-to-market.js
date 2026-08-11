@@ -3,9 +3,10 @@
 // Wired into /build via data/build-status.js (required there and attached to the
 // SMD project as `goToMarket`; rendered by renderGoToMarket() in lib/build-render.js).
 //
-// Research date: 2026-07-27. Full source-cited detail lives in two working docs:
-//   E:\Claude\SMD Council Outreach Plan.md   (councils, contacts, funding)
-//   E:\Claude\SMD Local Champions & Allies.md (named advocates, handling notes)
+// Research date: 2026-07-27. Full source-cited detail lives in two docs served from
+// docs-store/ (registered in build-status.js under this project's `docs`):
+//   smd-council-outreach-plan.md (councils, contacts, funding)
+//   smd-local-champions.md       (named advocates, handling notes)
 // Councils covered: Edinburgh, East Lothian, Midlothian, West Lothian.
 //
 // NOTE: contains named people and public contact routes. /build is login-gated
@@ -110,8 +111,8 @@ module.exports = {
     ],
 
     refs: [
-      { label: 'SMD Council Outreach Plan (full, source-cited)', url: 'file:///E:/Claude/SMD%20Council%20Outreach%20Plan.md' },
-      { label: 'SMD Local Champions & Allies (full, source-cited)', url: 'file:///E:/Claude/SMD%20Local%20Champions%20%26%20Allies.md' },
+      { label: 'SMD Council Outreach Plan (full, source-cited)', url: '/build/doc/smd-council-outreach-plan' },
+      { label: 'SMD Local Champions & Allies (full, source-cited)', url: '/build/doc/smd-local-champions' },
     ],
   },
 };
