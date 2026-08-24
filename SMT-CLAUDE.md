@@ -181,6 +181,17 @@ re-download the setup bundle from → 📚 Claude Code guide.
   than inventing a new notification path.
 - **PWAs:** we ship a separate PWA per audience (customer, seller, staff, admin,
   etc.); each manifest needs a stable `id`.
+- **Re-scanning syncs re-alert:** our syncs re-read the same window every pass, so
+  anything deliberately *not* marked processed (a "needs review" flag left open on
+  purpose so it can still resolve later) will re-fire its alert and re-append its
+  evidence row on every run. Keep the two separate: flag/notify once per source id,
+  and let resolution be its own explicit state. A four-day email loop on job 0309
+  came from exactly this.
+- **Part payments are VAT-inclusive:** never split a shortfall net-first. HMRC treats
+  any part payment as carrying its share of VAT (VAT Notice 700/18), so £300 against
+  a £300 + £60 invoice is £250 net + £50 VAT — the £60 owing is £50 net + £10 VAT,
+  not £60 of VAT. Apportion on the invoice's own VAT ratio, and remember VAT
+  bad-debt relief is only claimable six months after the due date.
 
 ---
 
