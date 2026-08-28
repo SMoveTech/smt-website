@@ -187,6 +187,26 @@ re-download the setup bundle from → 📚 Claude Code guide.
   evidence row on every run. Keep the two separate: flag/notify once per source id,
   and let resolution be its own explicit state. A four-day email loop on job 0309
   came from exactly this.
+- **Falsy is not "unset":** `0`, `''` and `null` are different answers, and a `&&`
+  or `|| null` that treats them alike will silently take a cheaper code path. This
+  cost real money: payroll tested `contract_type === 'contracted' && contracted_hours_per_week`,
+  the hours field was `null`, so the test read false and the run paid a PAYE employee
+  as a self-employed casual — no tax, no NI, no holiday pay, no warning. Read
+  optional numbers with an explicit `!= null` check. Zero is a value a human types.
+- **One field, one question:** if a flag is answering two questions ("is this
+  person on PAYE?" and "do they have guaranteed hours?"), split it into two named
+  predicates in a shared module and make every screen read from that module. The
+  payroll bug above, and the staff list filing an employee under "Casual Staff",
+  were the same field being asked two things. See `shared/employment.js` in SMO.
+- **Guards must run before the first write:** a pre-flight that fires after a
+  side effect cannot honestly say "nothing was written". Put the refusal at the
+  top of the handler and return 409, not 500 — nothing is broken, a human just
+  has to finish a record.
+- **Never hard-delete financial data:** a payslip, invoice or ledger row generated
+  in error is *voided* — the row stays, flagged with a reason, and drops out of
+  every read that feeds money or tax. Check them all when you add a void: totals,
+  cumulative year-to-date figures, averaging history, and any "does one already
+  exist?" test that would otherwise block the corrected record.
 - **Part payments are VAT-inclusive:** never split a shortfall net-first. HMRC treats
   any part payment as carrying its share of VAT (VAT Notice 700/18), so £300 against
   a £300 + £60 invoice is £250 net + £50 VAT — the £60 owing is £50 net + £10 VAT,
