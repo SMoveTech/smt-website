@@ -53,7 +53,7 @@ module.exports = {
 
     // What each finding means for how we build SMD.
     implicationsForSMD: [
-      'Our stock-truth / phone-as-POS idea targets the EXACT thing that killed ShopAppy (indies cannot keep real-time inventory in sync). Make keeping stock accurate effortless (scan-to-list, signed QR, phone-as-POS) and we fix the market leader\'s fatal flaw. Lead the pitch with this.',
+      'Stock-truth targets the EXACT thing that killed ShopAppy (indies cannot keep real-time inventory in sync). Make keeping stock accurate effortless — scan-to-list, signed QR, till-on-a-phone — and we fix the market leader\'s fatal flaw. Lead the pitch with this. NOTE (2026-08-29): that capability is no longer an SMD feature; it became a separate product, S-Move Ledger (SML), which treats SMD as one sales channel among several. The strategic point stands and arguably gets stronger — a shop running SML keeps its SMD listing accurate as a byproduct of using its own till — but SMD no longer owns the solution and must not be pitched as though it does. SMD\'s own answer to inventory drift is the SML connector.',
       'Directory-first is validated by their data: discovery was the strong, low-friction layer (45k visits/mo); forcing full e-commerce is what broke shops. Directory-first, e-commerce-optional is correct.',
       'Avoid their revenue model: charging shops a subscription propped up by council subsidy created a cliff — it only worked while someone else paid. SMD\'s free-forever-for-shops + sponsorship/sidebar + local adverts sidesteps the cliff, but shifts the funding burden onto us — those revenue lines must be real. Keep pressure-testing them.',
       'Keep per-shop operating cost near-zero. ShopAppy did bespoke shop-by-shop coverage — expensive at scale. Self-serve "claim your listing" must stay genuinely self-serve, no per-shop hand-holding.',
@@ -77,8 +77,9 @@ module.exports = {
 HUMAN-READABLE WRITE-UP (for the email / build-doc prose block)
 
 HEADLINE: ShopAppy did almost exactly what SMD does, reached Scotland, and shut
-down in October 2023 — and the reason it died is the exact problem SMD's
-stock-truth idea is designed to solve.
+down in October 2023 — and the reason it died is the exact problem stock-truth is
+designed to solve. (Since 2026-08-29 that solution is S-Move Ledger, a separate
+product, rather than a feature of SMD itself.)
 
 WHAT IT WAS
 Founded by Dr Jackie Mulligan (ex-director of enterprise, Leeds Beckett), launched

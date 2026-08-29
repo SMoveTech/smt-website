@@ -66,6 +66,14 @@ Products built and owned under SMT:
   shops sell online and revive the high street. Product strapline "Your
   Highstreet Online"; marketing line "Shop local, discover more". At
   `shop.s-move.co.uk`.
+- **SML / S-Move Ledger** — multi-channel stock control and a till for
+  independent shops. **In planning as of 2026-08-29, nothing built.** Deliberately
+  its own product rather than an SMD feature — SMD is locked to one geography and
+  this isn't, so it can be sold, rented or licensed on its own, and it's intended
+  to be the product SMT actually earns from. It will live at `stock.s-move.co.uk`,
+  with its own repo and deploy; SMD is one *connector* it talks to, never its
+  foundation. Project folder `E:\SML App\`. **Shelfmark** is the name of the
+  location/wayfinding system inside it.
 - **SMT website + build dashboard** — the corporate site and a login-gated living
   record of what we're building.
 
