@@ -171,8 +171,12 @@ re-download the setup bundle from → 📚 Claude Code guide.
 
 - **In-app dialogs:** our apps suppress native browser dialogs. Use the app's own
   helpers (e.g. `uiConfirm()`, `openPdf()`) instead of `alert`/`confirm`/`window.open`.
-- **PDF gitignore trap:** `*.pdf` may be gitignored, which silently stops static
-  PDFs from deploying. Check the ignore rules if a committed PDF goes missing live.
+- **Binary-asset gitignore trap:** blanket `*.pdf` / `*.png` / `*.jpg` rules exist to keep
+  staff photos and personal files out of the repo, and they silently stop static assets
+  from deploying too. Older assets often work only because they were tracked before the
+  rule existed, so “the other icons deploy fine” proves nothing. Add an allow
+  rule (`!name.png`) in the same commit and confirm with `git status` — an ignored
+  file never reaches Railway and nothing warns you.
 - **Column allowlists:** some update helpers (e.g. `db.updateCustomer`) only write
   columns on an allowlist — writes to columns not on the list are silently
   dropped. Add any new column to the allowlist when you add it to the table.
