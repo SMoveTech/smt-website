@@ -168,6 +168,7 @@ module.exports = {
         'Security tab: admin login log, accountant access log, approved devices, IP colour coding',
         'Replace inventory hard-delete with a Withdraw action before launch (current delete is testing-only)',
         'Route to market, replacing the grant — self-funded and in three steps. (1) Keep refining SMO through genuine daily use by SMR: real customers on real jobs is the refinement engine, and it costs nothing but time. (2) Once it feels right, divide it into features and rank them into a base package and paid add-ons — the same tiering being applied to SML, where the rank sets the tier. (3) Self-advertise the basic package and add options according to what customers actually ask for, rather than guessing the roadmap up front. Slower than a grant would have been, but it needs no permission from anyone and the feedback is real',
+        'Talk to Business Gateway (0300 013 4753, bgateway.com) — the referral Scottish Enterprise made when they turned the R&D grant down. Free, Scotland-wide, and aimed at trading companies rather than technical experiments, which is the mismatch that sank the SMART: SCOTLAND application. Worth asking specifically about support that fits a proven, already-trading product, and about the tax-advantages route they flagged. Costs a phone call',
         'Retail / white-label SMO as a product for other removals firms — resume by stripping personal data ("RemovalDesk" name is dead)',
       ],
       refs: [
