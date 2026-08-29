@@ -202,6 +202,13 @@ re-download the setup bundle from → 📚 Claude Code guide.
   predicates in a shared module and make every screen read from that module. The
   payroll bug above, and the staff list filing an employee under "Casual Staff",
   were the same field being asked two things. See `shared/employment.js` in SMO.
+  The customer-portal lockout was the third: `manually_created` was both an admin
+  display badge and the switch deciding whether a portal link carried its sign-in
+  token, so clearing the badge when a customer first opened their invite silently
+  revoked their only way in — and every later email, the quote included, dropped
+  them on the enquiry page. Ask what a flag *means*, not what it currently
+  correlates with: the real question was "can this customer sign in?", which is
+  `password_hash`, not "did admin type this record?".
 - **Guards must run before the first write:** a pre-flight that fires after a
   side effect cannot honestly say "nothing was written". Put the refusal at the
   top of the handler and return 409, not 500 — nothing is broken, a human just
