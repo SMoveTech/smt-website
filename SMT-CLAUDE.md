@@ -205,6 +205,14 @@ re-download the setup bundle from → 📚 Claude Code guide.
   the hours field was `null`, so the test read false and the run paid a PAYE employee
   as a self-employed casual — no tax, no NI, no holiday pay, no warning. Read
   optional numbers with an explicit `!= null` check. Zero is a value a human types.
+  The same shape bites lookups: normalising a missing key to `''` and comparing it
+  against records that also normalise an unset field to `''` makes empty match
+  empty, and `.find()` hands back whichever row happens to come first. SMO's
+  company-account lookup did this — a job raised with no email address resolved to
+  the first account with no sign-in address on it, so that one account's genuine
+  "Suppress all comms" setting was displayed against every emailless job in the
+  system. Refuse a blank key at the top of the lookup; "no key" is not "the empty
+  key".
 - **One field, one question:** if a flag is answering two questions ("is this
   person on PAYE?" and "do they have guaranteed hours?"), split it into two named
   predicates in a shared module and make every screen read from that module. The
